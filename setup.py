@@ -14,7 +14,7 @@ setup(
         'Development Status :: 4 - Beta',
         'Intended Audience :: Developers',
         'License :: OSI Approved :: Apache Software License',
-        'Natural Language :: English'
+        'Natural Language :: English',
         'Programming Language :: Python :: 3.10'
     ],
     install_requires=[

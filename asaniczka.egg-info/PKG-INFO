@@ -1,0 +1,17 @@
+Metadata-Version: 2.1
+Name: asaniczka
+Version: 1.0
+Summary: All my commonly custom defined fuctions
+Home-page: https://github.com/your_username/asaniczka
+Author: Asaniczka
+Author-email: asaniczka@gmail.com
+License: UNKNOWN
+Platform: UNKNOWN
+Classifier: Development Status :: 4 - Beta
+Classifier: Intended Audience :: Developers
+Classifier: License :: OSI Approved :: Apache Software License
+Classifier: Natural Language :: EnglishProgramming Language :: Python :: 3.10
+Description-Content-Type: text/markdown
+
+This package is a neat wrapper of all my commonly used functions like requests with advanced error handling, setting up loggers and such. The idea is to have it on pypi so I can use these functions in productions
+
