@@ -8,10 +8,11 @@ Asaniczka module provides quick functions to get up and running with a scraper.
 3. format_error()
 4. get_request()
 5. create_dir()
+6. steal_cookies()
 
 ## Available Classes:
 
-1. ProjectFolders
+1. ProjectSetup
 
 """
 
@@ -27,6 +28,7 @@ import json
 
 import pytz
 import requests
+from playwright.sync_api import sync_playwright
 
 # # # CLASSES # # #
 
@@ -258,9 +260,7 @@ def setup_logger(log_file_path: str,
         logging.Logger: The configured logger instance.
 
     Example Usage:
-        `LOGGER = setup_logger("/path/to/log/file.log")`
-
-        `LOGGER = setup_logger(log_file_path)`
+        `LOGGER = asaniczka.setup_logger("/path/to/log/file.log")`
     """
 
     level_name_to_int_lookup = {
@@ -315,7 +315,7 @@ def save_file(
         None
 
     Example Usage:
-        `save_temp_file("/path/to/temp/folder", "example_file", "This is the file content", "txt")`
+        `asaniczka.save_temp_file("/path/to/temp/folder", "example_file", "This is the file content", "txt")`
     """
 
     # format the content to a string
@@ -356,7 +356,7 @@ def format_error(error: str) -> str:
         str: The formatted error string.
 
     Example Usage:
-        `formatted_error = format_error(error)`
+        `formatted_error = asaniczka.format_error(error)`
     """
 
     error_type = str(type(error))
@@ -389,7 +389,7 @@ def get_request(
         RuntimeError: If the request failed after 5 retries.
 
     Example Usage:
-        `response_content = basic_request("https://example.com", logger)`
+        `response_content = asaniczka.get_request("https://example.com", logger)`
     """
     content = None
     retries = 0
@@ -454,3 +454,38 @@ def create_dir(folder: os.PathLike) -> os.PathLike:
     return folder
 
 
+def steal_cookies(url: str) -> dict:
+    """
+    Gets cookies from a given domain.
+
+    Args:
+        `url (str)`: The URL from which to steal cookies.
+
+    Returns:
+        `dict`: A dictionary containing the stolen cookies, where the keys are the cookie names and the values are the cookie values.
+
+    Raises:
+        RuntimeError: If an error occurs when stealing the cookies.
+
+    Example Usage:
+        `cookies = asaniczka.steal_cookies("https://example.com")`
+    """
+
+    try:
+        with sync_playwright() as pw:
+            browser = pw.chromium.launch()
+            page = browser.new_page()
+            page.goto(url)
+
+            cookies = page.context.cookies()
+
+        stolen_cookie_dict = {}
+        if cookies:
+            for cookie in cookies:
+                stolen_cookie_dict[cookie['name']] = cookie['value']
+
+        return stolen_cookie_dict
+
+    except Exception as error:
+        raise RuntimeError(
+            f'Error when stealing cookies. Please inform developer (asaniczka@gmail.com) of this error as this error is not handled. \n{format_error(error)}') from error
