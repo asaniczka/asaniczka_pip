@@ -397,7 +397,19 @@ def get_request(
         headers = {
             'User-Agent': 'Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:109.0) Gecko/20100101 Firefox/119.0'
         }
-        response = requests.get(url, headers=headers, timeout=5)
+        try:
+            response = requests.get(url, headers=headers, timeout=10)
+        # pylint: disable=broad-except
+        except Exception as error:
+            if logger_level_debug:
+                logger.debug(
+                    'Failed to get request. %s', format_error(error))
+            else:
+                logger.warning(
+                    'Failed to get request. %s', format_error(error))
+
+            retries += 1
+            continue
 
         if response.status_code == 200:
             # do the okay things
@@ -425,7 +437,7 @@ def get_request(
             continue
 
         if not silence_errors:
-            raise RuntimeError(f'No response from website. \
+            raise RuntimeError(f'Response code is neither 200 nor error. \
                                 Last status code {response.status_code}, \
                                 Response text: {format_error(response.text)}')
 
