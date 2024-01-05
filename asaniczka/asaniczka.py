@@ -10,7 +10,7 @@ Asaniczka module provides quick functions to get up and running with a scraper.
 
 ## Available Classes:
 
-1. project_folders
+1. ProjectFolders
 
 """
 
@@ -40,12 +40,12 @@ class ProjectFolders:
         `project_name (str)`: The name of the project.
 
     Attributes:
-        `project_name (str)`: The name of the project.
-        `project_folder (str)`: The path to the project folder.
-        `data_folder (str)`: The path to the data folder.
-        `temp_folder (str)`: The path to the temp folder.
-        `log_folder (str)`: The path to the log folder.
-        `log_file_path (str)`: The path to the log file.
+        :params project_name: The name of the project.
+        :params project_folder: The path to the project folder.
+        :params data_folder: The path to the data folder.
+        :params temp_folder: The path to the temp folder.
+        :params log_folder: The path to the log folder.
+        :params log_file_path: The path to the log file.
 
     Functions:
         temp_file_path(): Return a temporary file name as a path.
@@ -54,15 +54,17 @@ class ProjectFolders:
 
     Example Usage:
         project = ProjectFolders("MyProject")
-        print(project.temp_folder)  # Accessing the path to the temp folder.
     """
 
     def __init__(self, project_name: str) -> None:
+        if not project_name:
+            raise ValueError("A project name is required.")
+
         self.project_name = project_name
 
         # create the project folder
         cwd = os.getcwd()
-        self.project_folder = os.path.join(cwd, project_name)
+        self.project_folder = os.path.join(cwd, self.project_name)
         os.makedirs(self.project_folder, exist_ok=True)
 
         # create the data folder
