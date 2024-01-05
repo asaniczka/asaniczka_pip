@@ -82,7 +82,7 @@ class ProjectSetup:
         self.log_folder = os.path.join(self.project_folder, 'logs')
         os.makedirs(self.log_folder, exist_ok=True)
 
-        self.start_time = time.time
+        self.start_time = time.time()
 
     def temp_file_path(self, name: Optional[Union[str, None]] = None, extension: str = 'txt') -> os.PathLike:
         """Return a temporary file name as a path.
@@ -228,7 +228,7 @@ class ProjectSetup:
             float: The elapsed time in seconds if return_mins is False, or the elapsed time in minutes if return_mins is True.
         """
 
-        end_time = time.time
+        end_time = time.time()
         elapsed_time = end_time - self.start_time
 
         if return_mins:
