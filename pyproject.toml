@@ -1,0 +1,32 @@
+[build-system]
+requires = ['setuptools >= 61.0', 'wheel']
+build-backend = 'setuptools.build_meta'
+
+[project]
+name = "asaniczka"
+version = "1.2.0"
+description = "All my commonly used fuctions"
+readme = "asaniczka/README.md"
+dependencies = [
+    "pytz>=2022.1",
+    "requests>=2.31",
+    "playwright>=1.40.0"
+]
+requires-python = ">= 3.10"
+authors = [
+  {name = "Asaniczka", email = "asaniczka@gmail.com"}
+]
+maintainers = [
+  {name = "Asaniczka", email = "asaniczka@gmail.com"}
+]
+license = {text = "Apache-2.0"}
+classifiers=[
+        "Development Status :: 4 - Beta",
+        "Intended Audience :: Developers",
+        "License :: OSI Approved :: Apache Software License",
+        "Natural Language :: English",
+        "Programming Language :: Python :: 3.10"
+    ]
+
+[project.urls]
+Homepage="https://github.com/asaniczka/asaniczka_pip"

@@ -6,7 +6,7 @@ Asaniczka module provides quick functions to get up and running with a scraper.
 1. setup_logger()
 2. save_temp_file()
 3. format_error()
-4. basic_request()
+4. get_request()
 5. create_dir()
 
 ## Available Classes:
@@ -367,7 +367,7 @@ def format_error(error: str) -> str:
     return formatted_error
 
 
-def basic_request(
+def get_request(
         url: str,
         silence_errors: bool = False,
         logger: Optional[Union[None, logging.Logger]] = None,
@@ -452,3 +452,5 @@ def create_dir(folder: os.PathLike) -> os.PathLike:
 
     os.makedirs(folder, exist_ok=True)
     return folder
+
+
