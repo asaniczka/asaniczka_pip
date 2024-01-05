@@ -7,6 +7,7 @@ Asaniczka module provides quick functions to get up and running with a scraper.
 2. save_temp_file()
 3. format_error()
 4. basic_request()
+5. create_dir()
 
 ## Available Classes:
 
@@ -30,7 +31,7 @@ import requests
 # # # CLASSES # # #
 
 
-class ProjectFolders:
+class ProjectSetup:
     """A class that sets up project folders and provides access to their paths.
 
     This class sets up the project folder, data folder, temp folder, log folder, and log file path for a given project.
@@ -78,6 +79,8 @@ class ProjectFolders:
         # make the log folder and log file path
         self.log_folder = os.path.join(self.project_folder, 'logs')
         os.makedirs(self.log_folder, exist_ok=True)
+
+        self.start_time = time.time
 
     def temp_file_path(self, name: Optional[Union[str, None]] = None, extension: str = 'txt') -> os.PathLike:
         """Return a temporary file name as a path.
@@ -210,6 +213,30 @@ class ProjectFolders:
             os.makedirs(folder_path, exist_ok=True)
 
         return folder_path
+
+    def calc_elapsed_time(self, return_mins: bool = False, full_decimals: bool = False) -> float:
+        """
+        Calculates the elapsed time since starting the project.
+
+        Args:
+            return_mins (bool, optional): Whether to return the time in minutes. Defaults to False.
+            full_decimals (bool, optional): Whether to return all decimal places of the time. Defaults to False.
+
+        Returns:
+            float: The elapsed time in seconds if return_mins is False, or the elapsed time in minutes if return_mins is True.
+        """
+
+        end_time = time.time
+        elapsed_time = end_time - self.start_time
+
+        if return_mins:
+            elapsed_time = elapsed_time/60
+
+        if not full_decimals:
+            elapsed_time = float(f"{elapsed_time:.2f}")
+
+        return elapsed_time
+
 
 # # # FUNCTIONS # # #
 
@@ -418,3 +445,10 @@ def save_ndjson(data: dict, file_path: str) -> None:
 
     with open(file_path, 'a', encoding='utf-8') as dump_file:
         dump_file.write(f'{json.dumps(data)}\n')
+
+
+def create_dir(folder: os.PathLike) -> os.PathLike:
+    """creates a dir. Must send a valid path"""
+
+    os.makedirs(folder, exist_ok=True)
+    return folder

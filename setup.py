@@ -2,7 +2,7 @@ from setuptools import setup
 
 setup(
     name='asaniczka',
-    version='1.1.1',
+    version='1.1.2',
     author='Asaniczka',
     author_email='asaniczka@gmail.com',
     description='All my commonly custom defined fuctions',
