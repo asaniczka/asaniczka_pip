@@ -166,6 +166,9 @@ def check_ratelimit(url: str,
                 time.sleep(0.05)
                 futures.append(future)
 
+            if burst_data['requests_till_429'] != 0:
+                thread_executor.shutdown(wait=False, cancel_futures=True)
+
             for future in concurrent.futures.as_completed(futures):
                 try:
                     _ = future.result()
