@@ -240,6 +240,44 @@ class ProjectSetup:
         return elapsed_time
 
 
+class Timer:
+    """
+    A simple timer class to measure elapsed time.
+
+    Attributes:
+        start_time (float): The start time of the timer.
+
+    Methods:
+        lap(): Calculates the elapsed time since starting the timer.
+
+    """
+
+    def __init__(self) -> None:
+        self.start_time = time.time()
+
+    def lap(self, return_mins: bool = False, full_decimals: bool = False) -> float:
+        """
+        Calculates the elapsed time since starting the timer.
+
+        Args:
+            return_mins (bool, optional): Whether to return the time in minutes. Defaults to False.
+            full_decimals (bool, optional): Whether to return all decimal places of the time. Defaults to False.
+
+        Returns:
+            float: The elapsed time in seconds if return_mins is False, or the elapsed time in minutes if return_mins is True.
+        """
+
+        end_time = time.time()
+        elapsed_time = end_time - self.start_time
+
+        if return_mins:
+            elapsed_time = elapsed_time/60
+
+        if not full_decimals:
+            elapsed_time = float(f"{elapsed_time:.2f}")
+
+        return elapsed_time
+
 # # # FUNCTIONS # # #
 
 
