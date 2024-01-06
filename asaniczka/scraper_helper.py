@@ -22,7 +22,7 @@ import asaniczka
 
 
 def send_request(url: str,
-                 project: asaniczka.ProjectSetup,
+                 timer: asaniczka.Timer,
                  count_lock: Lock,
                  burst_data: dict,
                  pbar: tqdm = None,
@@ -88,7 +88,7 @@ def send_request(url: str,
             if burst_data['requests_till_429'] == 0:
 
                 burst_data['requests_till_429'] = burst_data['total_requests']
-                burst_data['time_till_429'] = project.calc_elapsed_time(
+                burst_data['time_till_429'] = timer.lap(
                     full_decimals=True)
 
         if burst_data['requests_till_429'] != 0:
@@ -100,7 +100,6 @@ def send_request(url: str,
 
 
 def check_ratelimit(url: str,
-                    project: asaniczka.ProjectSetup,
                     check=True,
                     headers: Optional[Union[dict, None]] = None,
                     data: Optional[Union[dict, str, None]] = None,
@@ -133,11 +132,12 @@ def check_ratelimit(url: str,
         'requests_till_429': 0,
         'time_till_429': 0
     }
+    timer = asaniczka.Timer()
 
     if check:
         status_code = send_request(
             url,
-            project,
+            timer,
             count_lock,
             burst_data,
             headers=headers,
@@ -154,7 +154,7 @@ def check_ratelimit(url: str,
                 future = thread_executor.submit(
                     send_request,
                     url,
-                    project,
+                    timer,
                     count_lock,
                     burst_data,
                     pbar=pbar,
