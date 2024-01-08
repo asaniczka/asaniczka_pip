@@ -70,7 +70,7 @@ class ProjectSetup:
 
     Example Usage:
         project = ProjectFolders("MyProject")
-    """ 
+    """
 
     def __init__(self, project_name: str) -> None:
         if not project_name:

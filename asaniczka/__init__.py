@@ -31,6 +31,8 @@ import pytz
 import requests
 from playwright.sync_api import sync_playwright
 
+# pylint: disable=logging-fstring-interpolation
+
 # # # CLASSES # # #
 
 
@@ -44,17 +46,27 @@ class ProjectSetup:
         `project_name (str)`: The name of the project.
 
     Attributes:
-        :params project_name: The name of the project.
-        :params project_folder: The path to the project folder.
-        :params data_folder: The path to the data folder.
-        :params temp_folder: The path to the temp folder.
-        :params log_folder: The path to the log folder.
-        :params log_file_path: The path to the log file.
+        project_name
+        project_folder
+        data_folder
+        temp_folder
+        log_folder
+        log_file_path
+        logger
+        sb_api_url
+        sb_db_url
+        sb_studio_url
+        sb_anon_key
 
     Functions:
-        temp_file_path(): Return a temporary file name as a path.
-        log_file_path(): log_file_path
-        sanitize_filename():
+        temp_file_path()
+        log_file_path()
+        sanitize_filename()
+        save_temp_file()
+        create_new_subfolder()
+        calc_elapsed_time()
+        start_supabase()
+        stop_supabase()
 
     Example Usage:
         project = ProjectFolders("MyProject")
@@ -88,6 +100,13 @@ class ProjectSetup:
         os.makedirs(self.db_folder, exist_ok=True)
 
         self.start_time = time.time()
+        self.logger = setup_logger(self.log_file_path(dated=True))
+
+        # optional attributes
+        self.sb_api_url = None
+        self.sb_db_url = None
+        self.sb_studio_url = None
+        self.sb_anon_key = None
 
     def temp_file_path(self, name: Optional[Union[str, None]] = None, extension: str = 'txt') -> os.PathLike:
         """Return a temporary file name as a path.
@@ -126,9 +145,9 @@ class ProjectSetup:
         """
 
         if utc:
-            date_today = datetime.datetime.now(pytz.utc).date
+            date_today = datetime.datetime.now(pytz.utc).date()
         else:
-            date_today = datetime.datetime.now().date
+            date_today = datetime.datetime.now().date()
 
         if dated:
             log_file_path = os.path.join(
@@ -246,16 +265,91 @@ class ProjectSetup:
 
     def start_supabase(self) -> None:
         """Call this function to start a supabase database"""
+        self.stop_supabase()
+        self.logger.info('Starting Supabase')
+
+        # check if supabase  cli is installed
         # pylint: disable=bare-except
         try:
-            subprocess.run('supabase', shell=True, check=True)
+            _ = subprocess.run('supabase', shell=True,
+                               check=True, capture_output=True)
             is_supabase_installed = True
         except:
             is_supabase_installed = False
 
         if not is_supabase_installed:
+            self.logger.critical(
+                "Asaniczka can't launch Supabase. You need to install supabase first. \nhttps://supabase.com/docs/guides/cli/getting-started")
             raise RuntimeError(
-                "I can't launch Supabase. You need to install supabase first. \n https://supabase.com/docs/guides/cli/getting-started")
+                "Asaniczka can't launch Supabase. You need to install supabase first. \nhttps://supabase.com/docs/guides/cli/getting-started")
+
+        config_file_path = os.path.join(
+            self.db_folder, 'supabase', 'config.toml')
+
+        if not os.path.exists(config_file_path):
+            self.logger.info("Creating supabase config")
+            # initialize the project setup
+            process = subprocess.Popen(['supabase', 'init'], stdout=subprocess.PIPE,
+                                       stdin=subprocess.PIPE, stderr=subprocess.PIPE, cwd=self.db_folder)
+
+            output, error = process.communicate(input=b'n\n')
+
+            # replace standard supabase ports with random ports to avoid clashes with other db instances
+            with open(config_file_path, 'r+', encoding='utf-8') as config_file:
+                lines = config_file.readlines()
+                lines = [line.strip() for line in lines]
+                ports_to_replace = [54320,  54321, 54322,
+                                    54323, 54324, 54325, 54326,  54327, 54328,
+                                    54329, 54330]
+
+                new_port_start = random.randint(20000, 50000)
+                self.logger.debug(
+                    f"supabase port start value is: {new_port_start}")
+                new_ports_list = []
+                for idx, port in enumerate(ports_to_replace):
+                    new_ports_list.append(new_port_start+idx)
+
+                modified_lines = []
+                for line in lines:
+                    for idx, port in enumerate(ports_to_replace):
+                        line = line.replace(
+                            str(port), str(new_ports_list[idx]))
+                    modified_lines.append(line)
+
+                config_file.seek(0)
+                config_file.write('\n'.join(modified_lines))
+                config_file.truncate()
+
+        db_start_response = subprocess.run(
+            'supabase start', shell=True, check=True, cwd=self.db_folder, capture_output=True, text=True)
+
+        # extract supabase endpoints
+        db_start_response_lines = db_start_response.stdout.split('\n')
+        for line in db_start_response_lines:
+            if 'API URL' in line:
+                self.sb_api_url = line.split(':', maxsplit=1)[-1].strip()
+            if 'DB URL' in line:
+                self.sb_db_url = line.split(':', maxsplit=1)[-1].strip()
+            if 'Studio URL' in line:
+                self.sb_studio_url = line.split(':', maxsplit=1)[-1].strip()
+                self.logger.info(f"Supabase STUDIO URL: {self.sb_studio_url}")
+            if 'anon key' in line:
+                self.sb_anon_key = line.split(':', maxsplit=1)[-1].strip()
+
+    def stop_supabase(self) -> None:
+        """Use this to stop any running supabase instances"""
+
+        self.logger.info('Stopping any supabase instance')
+
+        try:
+            _ = subprocess.run(
+                'supabase stop', shell=True, check=True, cwd=self.db_folder, capture_output=True)
+        except subprocess.CalledProcessError as error:
+            stderr_output = error.stderr.decode('utf-8')
+            self.logger.critical(
+                f"Unable to stop supabase. Error: {format_error(stderr_output)}")
+            raise RuntimeError(
+                "Unable to stop Supabase. Are you sure Docker is running? ") from error
 
 
 class Timer:
@@ -332,7 +426,7 @@ def setup_logger(log_file_path: str,
     logger.setLevel(logging.DEBUG)  # set the logging level to debug
 
     log_format = logging.Formatter(
-        '%(asctime)s :   %(levelname)s   :   %(message)s')
+        '%(asctime)s :  %(module)s  :   %(levelname)s   :   %(message)s')
 
     # init the console logger
     if stream:
