@@ -46,17 +46,27 @@ class ProjectSetup:
         `project_name (str)`: The name of the project.
 
     Attributes:
-        :params project_name: The name of the project.
-        :params project_folder: The path to the project folder.
-        :params data_folder: The path to the data folder.
-        :params temp_folder: The path to the temp folder.
-        :params log_folder: The path to the log folder.
-        :params log_file_path: The path to the log file.
+        project_name
+        project_folder
+        data_folder
+        temp_folder
+        log_folder
+        log_file_path
+        logger
+        sb_api_url
+        sb_db_url
+        sb_studio_url
+        sb_anon_key
 
     Functions:
-        temp_file_path(): Return a temporary file name as a path.
-        log_file_path(): log_file_path
+        temp_file_path()
+        log_file_path()
         sanitize_filename():
+        save_temp_file():
+        create_new_subfolder()
+        calc_elapsed_time()
+        start_supabase()
+        stop_supabase()
 
     Example Usage:
         project = ProjectFolders("MyProject")
