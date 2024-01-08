@@ -1,3 +1,5 @@
 dist/*
 asaniczka.egg-info/*
 test.py
+test/*
+__pycache__/*
