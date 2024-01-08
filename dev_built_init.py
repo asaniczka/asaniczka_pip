@@ -256,7 +256,7 @@ class ProjectSetup:
 
     def start_supabase(self) -> None:
         """Call this function to start a supabase database"""
-
+        self.stop_supabase()
         self.logger.info('Starting Supabase')
 
         # check if supabase  cli is installed
@@ -323,21 +323,24 @@ class ProjectSetup:
                 self.sb_db_url = line.split(':', maxsplit=1)[-1].strip()
             if 'Studio URL' in line:
                 self.sb_studio_url = line.split(':', maxsplit=1)[-1].strip()
+                self.logger.info(f"Supabase STUDIO URL: {self.sb_studio_url}")
             if 'anon key' in line:
                 self.sb_anon_key = line.split(':', maxsplit=1)[-1].strip()
-
-        print(self.sb_api_url)
-        print(self.sb_db_url)
-        print(self.sb_studio_url)
-        print(self.sb_anon_key)
 
     def stop_supabase(self):
         """Use this to stop any running supabase instances"""
 
         self.logger.info('Stopping any supabase instance')
 
-        _ = subprocess.run(
-            'supabase stop', shell=True, check=True, cwd=self.db_folder, capture_output=True)
+        try:
+            _ = subprocess.run(
+                'supabase stop', shell=True, check=True, cwd=self.db_folder, capture_output=True)
+        except subprocess.CalledProcessError as error:
+            stderr_output = error.stderr.decode('utf-8')
+            self.logger.critical(
+                f"Unable to stop supabase. Error: {format_error(stderr_output)}")
+            raise RuntimeError(
+                "Unable to stop Supabase. Are you sure Docker is running? ") from error
 
 
 class Timer:
