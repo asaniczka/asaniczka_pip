@@ -61,8 +61,8 @@ class ProjectSetup:
     Functions:
         temp_file_path()
         log_file_path()
-        sanitize_filename():
-        save_temp_file():
+        sanitize_filename()
+        save_temp_file()
         create_new_subfolder()
         calc_elapsed_time()
         start_supabase()
@@ -100,7 +100,6 @@ class ProjectSetup:
         os.makedirs(self.db_folder, exist_ok=True)
 
         self.start_time = time.time()
-
         self.logger = setup_logger(self.log_file_path(dated=True))
 
         # optional attributes
@@ -337,7 +336,7 @@ class ProjectSetup:
             if 'anon key' in line:
                 self.sb_anon_key = line.split(':', maxsplit=1)[-1].strip()
 
-    def stop_supabase(self):
+    def stop_supabase(self) -> None:
         """Use this to stop any running supabase instances"""
 
         self.logger.info('Stopping any supabase instance')
