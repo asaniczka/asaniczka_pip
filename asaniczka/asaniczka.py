@@ -33,7 +33,7 @@ import pytz
 import requests
 from playwright.sync_api import sync_playwright
 
-import asaniczka.db_tools as dbt
+from . import db_tools as dbt
 
 # pylint: disable=logging-fstring-interpolation
 

@@ -17,7 +17,7 @@ from typing import Optional, Union
 import logging
 import datetime
 import time
-import asaniczka
+from . import asaniczka
 
 
 def check_psql_installation(logger: Optional[Union[None, logging.Logger]] = None) -> None:
@@ -72,9 +72,9 @@ def psql_subprocess_executor(command: str, db_url: str) -> subprocess.CompletedP
 
 
 def get_sb_table_names(project: Optional[Union[asaniczka.ProjectSetup, None]] = None,
-                           db_url: Optional[Union[str, None]] = None,
-                           logger: Optional[Union[logging.Logger, None]] = None,
-                           make_list=False) -> str | list:
+                       db_url: Optional[Union[str, None]] = None,
+                       logger: Optional[Union[logging.Logger, None]] = None,
+                       make_list=False) -> str | list:
     """
     Get a list of all tables inside the database.
 
@@ -312,4 +312,3 @@ def run_backup_every_hour(project: asaniczka.ProjectSetup) -> None:
         do_sleep(10)  # sleep in 10 sec intervals
         time_to_sleep -= 10
         print(time_to_sleep)
-
