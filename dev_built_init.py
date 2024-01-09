@@ -26,10 +26,13 @@ import datetime
 import re
 import json
 import subprocess
+import threading
 
 import pytz
 import requests
 from playwright.sync_api import sync_playwright
+
+import db_tools as dbt
 
 # pylint: disable=logging-fstring-interpolation
 
@@ -107,8 +110,11 @@ class ProjectSetup:
         self.sb_db_url = None
         self.sb_studio_url = None
         self.sb_anon_key = None
+        self.run_backup_every_6_hours = False
 
-    def temp_file_path(self, name: Optional[Union[str, None]] = None, extension: str = 'txt') -> os.PathLike:
+    def temp_file_path(self,
+                       name: Optional[Union[str, None]] = None,
+                       extension: str = 'txt') -> os.PathLike:
         """Return a temporary file name as a path.
 
         Args:
@@ -132,7 +138,9 @@ class ProjectSetup:
 
         return temp_file_path
 
-    def log_file_path(self, dated: bool = False, utc: bool = False) -> os.PathLike:
+    def log_file_path(self,
+                      dated: bool = False,
+                      utc: bool = False) -> os.PathLike:
         """log_file_path
 
         Args:
@@ -219,7 +227,9 @@ class ProjectSetup:
                   'w', encoding='utf-8') as temp_file:
             temp_file.write(string_content)
 
-    def create_new_subfolder(self, name: str, is_temp: False) -> os.PathLike:
+    def create_new_subfolder(self,
+                             name: str,
+                             is_temp: False) -> os.PathLike:
         """Create a new folder with the given name.
 
         Args:
@@ -240,7 +250,9 @@ class ProjectSetup:
 
         return folder_path
 
-    def calc_elapsed_time(self, return_mins: bool = False, full_decimals: bool = False) -> float:
+    def calc_elapsed_time(self,
+                          return_mins: bool = False,
+                          full_decimals: bool = False) -> float:
         """
         Calculates the elapsed time since starting the project.
 
@@ -263,9 +275,8 @@ class ProjectSetup:
 
         return elapsed_time
 
-    def start_supabase(self, debug=False) -> None:
-        """Call this function to start a supabase database"""
-        self.logger.info('Starting Supabase')
+    def check_for_supabase_cli_installation(self) -> None:
+        """function checks if supabase cli is installed on the system"""
 
         # check if supabase  cli is installed
         # pylint: disable=bare-except
@@ -282,6 +293,10 @@ class ProjectSetup:
             raise RuntimeError(
                 "Asaniczka can't launch Supabase. You need to install supabase first. \nhttps://supabase.com/docs/guides/cli/getting-started")
 
+    def start_supabase(self, debug=False) -> None:
+        """Call this function to start a supabase database"""
+        self.logger.info('Starting Supabase')
+
         config_file_path = os.path.join(
             self.db_folder, 'supabase', 'config.toml')
 
@@ -291,7 +306,7 @@ class ProjectSetup:
             process = subprocess.Popen(['supabase', 'init'], stdout=subprocess.PIPE,
                                        stdin=subprocess.PIPE, stderr=subprocess.PIPE, cwd=self.db_folder)
 
-            output, error = process.communicate(input=b'n\n')
+            _ = process.communicate(input=b'n\n')
 
             # replace standard supabase ports with random ports to avoid clashes with other db instances
             with open(config_file_path, 'r+', encoding='utf-8') as config_file:
@@ -347,12 +362,18 @@ class ProjectSetup:
                 if 'anon key' in line:
                     self.sb_anon_key = line.split(':', maxsplit=1)[-1].strip()
 
+            self.run_backup_every_6_hours = True
+            background_backup = threading.Thread(
+                target=dbt.run_backup_every_6_hours, args=[self])
+            background_backup.start()
+
     def stop_supabase(self, no_log=False, debug=False) -> None:
         """Use this to stop any running supabase instances"""
 
         if not no_log:
             self.logger.info('Stopping any supabase instance')
 
+        self.run_backup_every_6_hours = False  # stop backup if running
         try:
             if not debug:
                 _ = subprocess.run(

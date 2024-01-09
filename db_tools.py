@@ -1,13 +1,39 @@
+"""
+This module provides functions to interact with a PostgreSQL database using the `psql` command.
+
+Functions:
+- check_for_psql_installation()
+- psql_subprocess_executor()
+- get_all_sb_table_names()
+- get_sb_column_details()
+- run_sb_db_command()
+- backup_sb_db()
+- run_backup_every_6_hours()
+"""
+
 import subprocess
 import os
 from typing import Optional, Union
 import logging
-import asaniczka
 import datetime
+import time
+import asaniczka
 
 
 def check_for_psql_installation(logger: Optional[Union[None, logging.Logger]] = None) -> None:
-    """Default checker to see if psql is installed"""
+    """
+    Default checker to see if psql is installed.
+
+    Args:
+        `logger (None, logging.Logger)`: The logger object to use for logging. Defaults to None.
+
+    Returns:
+        `None`
+
+    Raises:
+        `RuntimeError`: If psql is not installed.
+
+    """
 
     try:
 
@@ -24,7 +50,17 @@ def check_for_psql_installation(logger: Optional[Union[None, logging.Logger]] = 
 
 
 def psql_subprocess_executor(command: str, db_url: str) -> subprocess.CompletedProcess:
-    """General try except wrapper for psql commands via subprocess"""
+    """
+    General try-except wrapper for executing psql commands via subprocess.
+
+    Args:
+        `command (str)`: The psql command to be executed.
+        `db_url (str)`: The database URL.
+
+    Returns:
+        `subprocess.CompletedProcess`: The completed subprocess information.
+
+    """
 
     psql_command = f'psql "{db_url}" -c "{command}"'
 
@@ -39,7 +75,25 @@ def get_all_sb_table_names(project: Optional[Union[asaniczka.ProjectSetup, None]
                            db_url: Optional[Union[str, None]] = None,
                            logger: Optional[Union[logging.Logger, None]] = None,
                            make_list=False) -> str | list:
-    """get a list of all tables inside the database"""
+    """
+    Get a list of all tables inside the database.
+
+    Must send either `project` or `db_url and logger`
+
+    Args:
+        `project (asaniczka.ProjectSetup | None)`: The project setup object. Defaults to None.
+        `db_url (str | None)`: The database URL. Defaults to None.
+        `logger (logging.Logger | None)`: The logger object to use for logging. Defaults to None.
+        `make_list (bool)`: Whether to return the table names as a list or a string. Defaults to False.
+
+    Returns:
+        `str | list`: The table names.
+
+    Raises:
+        `AttributeError`: If db_url is not provided.
+        `RuntimeError`: If the psql subprocess returns a non-zero exit code.
+
+    """
 
     if project:
         logger = project.logger
@@ -81,7 +135,24 @@ def get_sb_column_details(table: str,
                           project: Optional[Union[asaniczka.ProjectSetup, None]] = None,
                           db_url: Optional[Union[str, None]] = None,
                           logger: Optional[Union[logging.Logger, None]] = None) -> str:
-    """Query Column names and data types of the provided table"""
+    """
+    Query Column names and data types of the provided table.
+
+    Must send either `project` or `db_url and logger`
+
+    Args:
+        `table (str)`: The name of the table.
+        `project (asaniczka.ProjectSetup, None)`: A project setup instance (optional).
+        `db_url (str, None)`: The database URL (optional).
+        `logger (logging.Logger, None)`: A logger instance (optional).
+
+    Returns:
+        `str`: The column details of the specified table.
+
+    Raises:
+        `AttributeError`: If no database URL is provided.
+        `RuntimeError`: If the subprocess returns a non-zero exit code.
+    """
 
     if project:
         logger = project.logger
@@ -116,11 +187,23 @@ def run_sb_db_command(command: str,
                       project: Optional[Union[asaniczka.ProjectSetup, None]] = None,
                       db_url: Optional[Union[str, None]] = None,
                       logger: Optional[Union[logging.Logger, None]] = None) -> str | None:
-    """Create a table on the supabase db using psql
+    """
+    Create a table on the Supabase database using psql.
 
-    Send `db_url` and `logger` or `asaniczka.ProjectSetup`
+    Must send either `project` or `db_url and logger`
 
-    Wrap and string inside single quoes `''` as `""` are used by subprocess
+    Args:
+        `command (str)`: The psql command to be executed.
+        `project (asaniczka.ProjectSetup, None)`: A project setup instance (optional).
+        `db_url (str, None)`: The database URL (optional).
+        `logger (logging.Logger, None)`: A logger instance (optional).
+
+    Returns:
+        `str | None`: The output of the command execution.
+
+    Raises:
+        `AttributeError`: If no database URL is provided.
+        `RuntimeError`: If the subprocess returns a non-zero exit code.
     """
 
     if project:
@@ -151,9 +234,19 @@ def backup_sb_db(project: Optional[Union[asaniczka.ProjectSetup, None]] = None,
                  db_url: Optional[Union[str, None]] = None,
                  dest_folder: Optional[Union[os.PathLike, None]] = None,
                  logger: Optional[Union[None, logging.Logger]] = None) -> None:
-    """Creates a backup the the databse to the given folder
+    """
+    Creates a backup of the database to the given folder.
 
-    Send `asaniczka.ProjectSetup` or `db_url` and `dest_folder`
+    Must send either `asaniczka.ProjectSetup` or `db_url` and `dest_folder`.
+
+    Args:
+        `project (asaniczka.ProjectSetup, None)`: A project setup instance (optional).
+        `db_url (str, None)`: The database URL (optional).
+        `dest_folder (os.PathLike, None)`: The destination folder to store the backup (optional).
+        `logger (None, logging.Logger)`: A logger instance (optional).
+
+    Raises:
+        `AttributeError`: If no database URL is provided.
 
     """
 
@@ -180,11 +273,36 @@ def backup_sb_db(project: Optional[Union[asaniczka.ProjectSetup, None]] = None,
 
     command = f"supabase db dump --db-url '{db_url}' -f '{schema_path}';supabase db dump --db-url '{db_url}' -f '{roles_path}' --role-only;supabase db dump --db-url '{db_url}' -f '{data_path}' --data-only;"
 
+    # pylint: disable=subprocess-run-check
     completed_process = subprocess.run(
         command, shell=True, text=True, capture_output=True)
 
-    print(completed_process)
+    if completed_process.returncode != 0:
+        if logger:
+            logger.error(
+                f"Error when backing up database: {asaniczka.format_error(completed_process.stdout)}")
+        else:
+            print(
+                f"Error when backing up database: {asaniczka.format_error(completed_process.stdout)}")
+
+    if logger:
+        logger.info('Back up completed!')
+
+
+def run_backup_every_6_hours(project: asaniczka.ProjectSetup) -> None:
+    """
+    Background task to run database backup every 6 hours.
+
+    Args:
+        `project (asaniczka.ProjectSetup)`: A project setup instance.
+
+    """
+
+    time.sleep(30*60)  # sleep for 30 mins before starting
+    while project.run_backup_every_6_hours:
+        project.logger.info('Backing up the database')
+        # backup_sb_db(project)
+        time.sleep(6*60*60)  # sleep for 6 hours
 
 
 DB_URL = 'postgresql://postgres:postgres@127.0.0.1:39162/postgres'
-
