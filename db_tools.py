@@ -298,11 +298,20 @@ def run_backup_every_6_hours(project: asaniczka.ProjectSetup) -> None:
 
     """
 
-    time.sleep(30*60)  # sleep for 30 mins before starting
+    def do_sleep(time_to_sleep: int) -> None:
+        time.sleep(time_to_sleep)
+
+    # time_to_sleep = 30*60  # sleep for 30 mins before starting
+    time_to_sleep = 0
     while project.run_backup_every_6_hours:
-        project.logger.info('Backing up the database')
-        # backup_sb_db(project)
-        time.sleep(6*60*60)  # sleep for 6 hours
+        if time_to_sleep < 1:
+            project.logger.info('Backing up the database')
+            # backup_sb_db(project)
+            time_to_sleep = 6*60*60
+
+        do_sleep(10)  # sleep in 10 sec intervals
+        time_to_sleep -= 10
+        print(time_to_sleep)
 
 
 DB_URL = 'postgresql://postgres:postgres@127.0.0.1:39162/postgres'
