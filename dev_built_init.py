@@ -13,6 +13,7 @@ Asaniczka module provides quick functions to get up and running with a scraper.
 ## Available Classes:
 
 1. ProjectSetup
+2. Timer
 
 """
 
@@ -68,6 +69,7 @@ class ProjectSetup:
         save_temp_file()
         create_new_subfolder()
         calc_elapsed_time()
+        check_for_supabase_cli_installation()
         start_supabase()
         stop_supabase()
 
