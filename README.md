@@ -14,6 +14,7 @@ The Asaniczka module provides quick functions to get up and running with a scrap
 ## Available Classes:
 
 1. `ProjectSetup`: A class that sets up project folders and provides access to their paths.
+2.
 
 ## Installation
 
@@ -28,7 +29,7 @@ Remember to run `playwright install` on cmd/terminal after installation to insta
 ## Usage
 
 ```python
-import asaniczka
+import asaniczka.main as asaniczka
 
 # Create project folders
 project = asaniczka.ProjectSetup("MyProject")

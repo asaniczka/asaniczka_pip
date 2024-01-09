@@ -18,7 +18,7 @@ import time
 import requests
 from tqdm.auto import tqdm
 from playwright.sync_api import sync_playwright
-from . import asaniczka
+import asaniczka.main as asaniczka
 
 
 def send_request(url: str,
