@@ -22,7 +22,7 @@ import asaniczka.main as asaniczka
 
 
 def send_request(url: str,
-                 timer: asaniczka.Timer,
+                 timer,
                  count_lock: Lock,
                  burst_data: dict,
                  pbar: tqdm = None,
@@ -196,7 +196,7 @@ def check_ratelimit(url: str,
     return return_message
 
 
-def help_forge_cookies(url: str, project: asaniczka.ProjectSetup) -> None:
+def help_forge_cookies(url: str, project) -> None:
     """
     Use this function to help identify cookie variables for forging cookies.
 

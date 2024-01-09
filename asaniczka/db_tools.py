@@ -71,7 +71,7 @@ def psql_subprocess_executor(command: str, db_url: str) -> subprocess.CompletedP
     return completed_process
 
 
-def get_sb_table_names(project: Optional[Union[asaniczka.ProjectSetup, None]] = None,
+def get_sb_table_names(project=None,
                        db_url: Optional[Union[str, None]] = None,
                        logger: Optional[Union[logging.Logger, None]] = None,
                        make_list=False) -> str | list:
@@ -132,7 +132,7 @@ def get_sb_table_names(project: Optional[Union[asaniczka.ProjectSetup, None]] = 
 
 
 def get_sb_column_details(table: str,
-                          project: Optional[Union[asaniczka.ProjectSetup, None]] = None,
+                          project=None,
                           db_url: Optional[Union[str, None]] = None,
                           logger: Optional[Union[logging.Logger, None]] = None) -> str:
     """
@@ -184,7 +184,7 @@ def get_sb_column_details(table: str,
 
 
 def run_sb_db_command(command: str,
-                      project: Optional[Union[asaniczka.ProjectSetup, None]] = None,
+                      project=None,
                       db_url: Optional[Union[str, None]] = None,
                       logger: Optional[Union[logging.Logger, None]] = None) -> str | None:
     """
@@ -230,7 +230,7 @@ def run_sb_db_command(command: str,
     print(completed_process.stdout)
 
 
-def backup_sb_db(project: Optional[Union[asaniczka.ProjectSetup, None]] = None,
+def backup_sb_db(project=None,
                  db_url: Optional[Union[str, None]] = None,
                  dest_folder: Optional[Union[os.PathLike, None]] = None,
                  logger: Optional[Union[None, logging.Logger]] = None) -> None:
@@ -289,7 +289,7 @@ def backup_sb_db(project: Optional[Union[asaniczka.ProjectSetup, None]] = None,
         logger.info('Back up completed!')
 
 
-def run_backup_every_hour(project: asaniczka.ProjectSetup) -> None:
+def run_backup_every_hour(project) -> None:
     """
     Background task to run database backup every 6 hours.
 
