@@ -310,11 +310,18 @@ class ProjectSetup:
 
         self.stop_supabase_instance(no_log=True, debug=debug)
         if not debug:
-            db_start_response = subprocess.run(
-                'supabase start', shell=True, check=True, cwd=self.db_folder, capture_output=True, text=True)
+            try:
+                db_start_response = subprocess.run(
+                    'supabase start', shell=True, check=True, cwd=self.db_folder, capture_output=True, text=True)
+            except subprocess.CalledProcessError as error:
+                error_message = error.stderr
+                self.logger.critical(
+                    f"Error when starting db: {format_error(error_message)}")
+                raise RuntimeError("Error when starting db") from error
         else:
             subprocess.run(
-                'supabase start', shell=True, check=True, cwd=self.db_folder)
+                'supabase start', shell=True, check=True, cwd=self.db_folder, text=True)
+
             self.logger.critical(
                 "You have selected to launch Supabase in debug mode. Asaniczka module can't access any db functions. Please run without debug flag.")
 
