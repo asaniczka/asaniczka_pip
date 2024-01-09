@@ -297,6 +297,8 @@ class ProjectSetup:
             with open(config_file_path, 'r+', encoding='utf-8') as config_file:
                 lines = config_file.readlines()
                 lines = [line.strip() for line in lines]
+                lines = [line.replace(
+                    'project_id = "databases"', f'project_id = "{self.project_name}"') for line in lines]
                 ports_to_replace = [54320,  54321, 54322,
                                     54323, 54324, 54325, 54326,  54327, 54328,
                                     54329, 54330]
@@ -319,7 +321,7 @@ class ProjectSetup:
                 config_file.write('\n'.join(modified_lines))
                 config_file.truncate()
 
-        self.stop_supabase()
+        self.stop_supabase(no_log=True)
         db_start_response = subprocess.run(
             'supabase start', shell=True, check=True, cwd=self.db_folder, capture_output=True, text=True)
 
@@ -336,10 +338,11 @@ class ProjectSetup:
             if 'anon key' in line:
                 self.sb_anon_key = line.split(':', maxsplit=1)[-1].strip()
 
-    def stop_supabase(self) -> None:
+    def stop_supabase(self, no_log=False) -> None:
         """Use this to stop any running supabase instances"""
 
-        self.logger.info('Stopping any supabase instance')
+        if not no_log:
+            self.logger.info('Stopping any supabase instance')
 
         try:
             _ = subprocess.run(

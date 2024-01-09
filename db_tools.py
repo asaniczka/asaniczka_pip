@@ -76,10 +76,45 @@ def get_all_table_names(project: Optional[Union[asaniczka.ProjectSetup, None]] =
     return return_bundle
 
 
-def run_sb_command(command: str,
-                   project: Optional[Union[asaniczka.ProjectSetup, None]] = None,
-                   db_url: Optional[Union[str, None]] = None,
-                   logger: Optional[Union[logging.Logger, None]] = None) -> str | None:
+def get_column_details(table: str,
+                       project: Optional[Union[asaniczka.ProjectSetup, None]] = None,
+                       db_url: Optional[Union[str, None]] = None,
+                       logger: Optional[Union[logging.Logger, None]] = None) -> str:
+    """Query Column names and data types of the provided table"""
+
+    if project:
+        logger = project.logger
+        db_url = project.sb_db_url
+
+    if not db_url:
+        if logger:
+            logger.critical(
+                "You didn't send a db_url. By get_all_table_names()")
+        raise AttributeError("You didn't send a db_url")
+
+    check_for_psql_installation(logger)
+
+    command = f"SELECT column_name, data_type FROM information_schema.columns WHERE table_schema = 'public' AND table_name = '{table}';"
+
+    completed_process = psql_subprocess_executor(command, db_url)
+
+    if completed_process.returncode != 0:
+        if logger:
+            logger.error(
+                f"Subprocess returned non-zero exist: {asaniczka.format_error(completed_process.stderr)}")
+
+        raise RuntimeError(
+            f'Subprocess returned non-zero exist: {asaniczka.format_error(completed_process.stderr)}')
+
+    return_bundle = completed_process.stdout
+
+    return return_bundle
+
+
+def run_sbdb_command(command: str,
+                     project: Optional[Union[asaniczka.ProjectSetup, None]] = None,
+                     db_url: Optional[Union[str, None]] = None,
+                     logger: Optional[Union[logging.Logger, None]] = None) -> str | None:
     """Create a table on the supabase db using psql
 
     Send `db_url` and `logger` or `asaniczka.ProjectSetup`
@@ -120,3 +155,5 @@ DB_URL = 'postgresql://postgres:postgres@127.0.0.1:25392/postgres'
 #     "CREATE TABLE authors (id SERIAL PRIMARY KEY, location TEXT NOT NULL);", db_url=DB_URL)
 print(get_all_table_names(
     db_url=DB_URL, make_list=True))
+
+print(get_column_details('users', db_url=DB_URL))
