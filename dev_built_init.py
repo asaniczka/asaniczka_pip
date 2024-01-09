@@ -33,7 +33,7 @@ import pytz
 import requests
 from playwright.sync_api import sync_playwright
 
-import db_tools as dbt
+import asaniczka.db_tools as dbt
 
 # pylint: disable=logging-fstring-interpolation
 
@@ -95,7 +95,7 @@ class ProjectSetup:
         self.sb_db_url = None
         self.sb_studio_url = None
         self.sb_anon_key = None
-        self.run_backup_every_6_hours = False
+        self.db_backup_loop = False
 
     def create_folder(self, parent: os.PathLike, child: str) -> os.PathLike:
         """Create a folder in the given parent directory"""
@@ -335,9 +335,9 @@ class ProjectSetup:
                 if 'anon key' in line:
                     self.sb_anon_key = line.split(':', maxsplit=1)[-1].strip()
 
-            self.run_backup_every_6_hours = True
+            self.db_backup_loop = True
             background_backup = threading.Thread(
-                target=dbt.run_backup_every_6_hours, args=[self])
+                target=dbt.run_backup_every_hour, args=[self])
             background_backup.start()
 
     def stop_supabase_instance(self, no_log=False, debug=False) -> None:
@@ -346,7 +346,7 @@ class ProjectSetup:
         if not no_log:
             self.logger.info('Stopping any supabase instance')
 
-        self.run_backup_every_6_hours = False  # stop backup if running
+        self.db_backup_loop = False  # stop backup if running
         try:
             if not debug:
                 _ = subprocess.run(

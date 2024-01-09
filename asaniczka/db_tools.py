@@ -2,9 +2,9 @@
 This module provides functions to interact with a PostgreSQL database using the `psql` command.
 
 Functions:
-- check_for_psql_installation()
+- check_psql_installation()
 - psql_subprocess_executor()
-- get_all_sb_table_names()
+- get_sb_table_names()
 - get_sb_column_details()
 - run_sb_db_command()
 - backup_sb_db()
@@ -20,7 +20,7 @@ import time
 import asaniczka
 
 
-def check_for_psql_installation(logger: Optional[Union[None, logging.Logger]] = None) -> None:
+def check_psql_installation(logger: Optional[Union[None, logging.Logger]] = None) -> None:
     """
     Default checker to see if psql is installed.
 
@@ -71,7 +71,7 @@ def psql_subprocess_executor(command: str, db_url: str) -> subprocess.CompletedP
     return completed_process
 
 
-def get_all_sb_table_names(project: Optional[Union[asaniczka.ProjectSetup, None]] = None,
+def get_sb_table_names(project: Optional[Union[asaniczka.ProjectSetup, None]] = None,
                            db_url: Optional[Union[str, None]] = None,
                            logger: Optional[Union[logging.Logger, None]] = None,
                            make_list=False) -> str | list:
@@ -105,7 +105,7 @@ def get_all_sb_table_names(project: Optional[Union[asaniczka.ProjectSetup, None]
                 "You didn't send a db_url. By get_all_table_names()")
         raise AttributeError("You didn't send a db_url")
 
-    check_for_psql_installation(logger)
+    check_psql_installation(logger)
 
     if make_list:
         command = "SELECT array_agg(table_name) FROM information_schema.tables WHERE table_schema = 'public';"
@@ -164,7 +164,7 @@ def get_sb_column_details(table: str,
                 "You didn't send a db_url. By get_all_table_names()")
         raise AttributeError("You didn't send a db_url")
 
-    check_for_psql_installation(logger)
+    check_psql_installation(logger)
 
     command = f"SELECT column_name, data_type FROM information_schema.columns WHERE table_schema = 'public' AND table_name = '{table}';"
 
@@ -215,7 +215,7 @@ def run_sb_db_command(command: str,
             logger.critical("You didn't send a db_url. By create_sb_table()")
         raise AttributeError("You didn't send a db_url")
 
-    check_for_psql_installation(logger)
+    check_psql_installation(logger)
 
     completed_process = psql_subprocess_executor(command, db_url)
 
@@ -259,7 +259,7 @@ def backup_sb_db(project: Optional[Union[asaniczka.ProjectSetup, None]] = None,
             logger.critical("You didn't send a db_url. By backup_sb_db()")
         raise AttributeError("You didn't send a db_url")
 
-    check_for_psql_installation(logger)
+    check_psql_installation(logger)
 
     time_right_now = datetime.datetime.now().strftime('%Y-%m-%d-%H-%M-%S')
 
@@ -289,7 +289,7 @@ def backup_sb_db(project: Optional[Union[asaniczka.ProjectSetup, None]] = None,
         logger.info('Back up completed!')
 
 
-def run_backup_every_6_hours(project: asaniczka.ProjectSetup) -> None:
+def run_backup_every_hour(project: asaniczka.ProjectSetup) -> None:
     """
     Background task to run database backup every 6 hours.
 
@@ -303,15 +303,13 @@ def run_backup_every_6_hours(project: asaniczka.ProjectSetup) -> None:
 
     # time_to_sleep = 30*60  # sleep for 30 mins before starting
     time_to_sleep = 0
-    while project.run_backup_every_6_hours:
+    while project.db_backup_loop:
         if time_to_sleep < 1:
             project.logger.info('Backing up the database')
-            # backup_sb_db(project)
-            time_to_sleep = 6*60*60
+            backup_sb_db(project)
+            time_to_sleep = 60*60
 
         do_sleep(10)  # sleep in 10 sec intervals
         time_to_sleep -= 10
         print(time_to_sleep)
 
-
-DB_URL = 'postgresql://postgres:postgres@127.0.0.1:39162/postgres'
