@@ -311,4 +311,3 @@ def run_backup_every_hour(project) -> None:
 
         do_sleep(10)  # sleep in 10 sec intervals
         time_to_sleep -= 10
-        print(time_to_sleep)

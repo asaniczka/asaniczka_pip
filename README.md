@@ -30,6 +30,8 @@ Remember to run `playwright install` on cmd/terminal after installation to insta
 
 ```python
 import asaniczka.main as asaniczka
+import asaniczka.db_tools as dbt
+import asaniczka.scraper_helper as ash
 
 # Create project folders
 project = asaniczka.ProjectSetup("MyProject")
