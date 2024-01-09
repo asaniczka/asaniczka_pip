@@ -265,7 +265,6 @@ class ProjectSetup:
 
     def start_supabase(self) -> None:
         """Call this function to start a supabase database"""
-        self.stop_supabase()
         self.logger.info('Starting Supabase')
 
         # check if supabase  cli is installed
@@ -320,6 +319,7 @@ class ProjectSetup:
                 config_file.write('\n'.join(modified_lines))
                 config_file.truncate()
 
+        self.stop_supabase()
         db_start_response = subprocess.run(
             'supabase start', shell=True, check=True, cwd=self.db_folder, capture_output=True, text=True)
 
