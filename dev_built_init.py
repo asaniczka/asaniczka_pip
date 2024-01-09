@@ -263,7 +263,7 @@ class ProjectSetup:
 
         return elapsed_time
 
-    def start_supabase(self) -> None:
+    def start_supabase(self, debug=False) -> None:
         """Call this function to start a supabase database"""
         self.logger.info('Starting Supabase')
 
@@ -321,32 +321,51 @@ class ProjectSetup:
                 config_file.write('\n'.join(modified_lines))
                 config_file.truncate()
 
-        self.stop_supabase(no_log=True)
-        db_start_response = subprocess.run(
-            'supabase start', shell=True, check=True, cwd=self.db_folder, capture_output=True, text=True)
+        self.stop_supabase(no_log=True, debug=debug)
+        if not debug:
+            db_start_response = subprocess.run(
+                'supabase start', shell=True, check=True, cwd=self.db_folder, capture_output=True, text=True)
+        else:
+            subprocess.run(
+                'supabase start', shell=True, check=True, cwd=self.db_folder)
+            self.logger.critical(
+                "You have selected to launch Supabase in debug mode. Asaniczka module can't access any db functions. Please run without debug flag.")
 
         # extract supabase endpoints
-        db_start_response_lines = db_start_response.stdout.split('\n')
-        for line in db_start_response_lines:
-            if 'API URL' in line:
-                self.sb_api_url = line.split(':', maxsplit=1)[-1].strip()
-            if 'DB URL' in line:
-                self.sb_db_url = line.split(':', maxsplit=1)[-1].strip()
-            if 'Studio URL' in line:
-                self.sb_studio_url = line.split(':', maxsplit=1)[-1].strip()
-                self.logger.info(f"Supabase STUDIO URL: {self.sb_studio_url}")
-            if 'anon key' in line:
-                self.sb_anon_key = line.split(':', maxsplit=1)[-1].strip()
+        if not debug:
+            db_start_response_lines = db_start_response.stdout.split('\n')
+            for line in db_start_response_lines:
+                if 'API URL' in line:
+                    self.sb_api_url = line.split(':', maxsplit=1)[-1].strip()
+                if 'DB URL' in line:
+                    self.sb_db_url = line.split(':', maxsplit=1)[-1].strip()
+                if 'Studio URL' in line:
+                    self.sb_studio_url = line.split(
+                        ':', maxsplit=1)[-1].strip()
+                    self.logger.info(
+                        f"Supabase STUDIO URL: {self.sb_studio_url}")
+                if 'anon key' in line:
+                    self.sb_anon_key = line.split(':', maxsplit=1)[-1].strip()
 
-    def stop_supabase(self, no_log=False) -> None:
+    def stop_supabase(self, no_log=False, debug=False) -> None:
         """Use this to stop any running supabase instances"""
 
         if not no_log:
             self.logger.info('Stopping any supabase instance')
 
         try:
-            _ = subprocess.run(
-                'supabase stop', shell=True, check=True, cwd=self.db_folder, capture_output=True)
+            if not debug:
+                _ = subprocess.run(
+                    'supabase stop', shell=True, check=True, cwd=self.db_folder, capture_output=True)
+            else:
+                subprocess.run(
+                    'supabase stop', shell=True, check=True, cwd=self.db_folder, )
+
+                self.sb_api_url = None
+                self.sb_db_url = None
+                self.sb_studio_url = None
+                self.sb_anon_key = None
+
         except subprocess.CalledProcessError as error:
             stderr_output = error.stderr.decode('utf-8')
             self.logger.critical(
