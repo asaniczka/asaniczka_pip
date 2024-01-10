@@ -361,10 +361,10 @@ class ProjectSetup:
                 subprocess.run(
                     'supabase stop', shell=True, check=True, cwd=self.db_folder, )
 
-                self.sb_api_url = None
-                self.sb_db_url = None
-                self.sb_studio_url = None
-                self.sb_anon_key = None
+            self.sb_api_url = None
+            self.sb_db_url = None
+            self.sb_studio_url = None
+            self.sb_anon_key = None
 
             if not no_log:
                 self.logger.info(
