@@ -1,7 +1,8 @@
 dist/*
 asaniczka.egg-info/*
-test.py
-test/*
+*/test.py
 __pycache__/*
 */__pycache__/*
 dev/*
+testing/*
+test/*

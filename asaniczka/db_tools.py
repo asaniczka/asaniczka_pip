@@ -34,8 +34,9 @@ class SupabaseManager:
     def __init__(self, project) -> None:
         if not project:
             raise AttributeError('Please send asaniczka.ProjectSetup')
-        
+
         self.project = project
+        self.logger = self.project.logger
         self.sb_api_url = None
         self.sb_db_url = None
         self.sb_studio_url = None
@@ -235,17 +236,17 @@ def psql_subprocess_executor(command: str, db_url: str) -> subprocess.CompletedP
     return completed_process
 
 
-def get_sb_table_names(project=None,
+def get_table_names_psql(sb_manager=None,
                        db_url: Optional[Union[str, None]] = None,
                        logger: Optional[Union[logging.Logger, None]] = None,
                        make_list=False) -> str | list:
     """
     Get a list of all tables inside the database.
 
-    Must send either `project` or `db_url and logger`
+    Must send either `sb_manager` or `db_url and logger`
 
     Args:
-        `project (asaniczka.ProjectSetup | None)`: The project setup object. Defaults to None.
+        `sb_manager (dbt.SupabaseManager | None)`: The SupabaseManager instance. Defaults to None.
         `db_url`: The database URL. Defaults to None.
         `logger`: The logger object to use for logging. Defaults to None.
         `make_list`: Whether to return the table names as a list or a string. Defaults to False.
@@ -259,9 +260,9 @@ def get_sb_table_names(project=None,
 
     """
 
-    if project:
-        logger = project.logger
-        db_url = project.sb_db_url
+    if sb_manager:
+        logger = sb_manager.logger
+        db_url = sb_manager.sb_db_url
 
     if not db_url:
         if logger:
@@ -295,18 +296,18 @@ def get_sb_table_names(project=None,
     return return_bundle
 
 
-def get_sb_column_details(table: str,
-                          project=None,
+def get_column_details_psql(table: str,
+                          sb_manager=None,
                           db_url: Optional[Union[str, None]] = None,
                           logger: Optional[Union[logging.Logger, None]] = None) -> str:
     """
     Query Column names and data types of the provided table.
 
-    Must send either `project` or `db_url and logger`
+    Must send either `sb_manager` or `db_url and logger`
 
     Args:
         `table`: The name of the table.
-        `project (asaniczka.ProjectSetup, None)`: A project setup instance (optional).
+        `sb_manager (dbt.SupabaseManaager, None)`: A SupabaseManaager instance (optional).
         `db_url`: The database URL (optional).
         `logger`: A logger instance (optional).
 
@@ -318,9 +319,9 @@ def get_sb_column_details(table: str,
         `RuntimeError`: If the subprocess returns a non-zero exit code.
     """
 
-    if project:
-        logger = project.logger
-        db_url = project.sb_db_url
+    if sb_manager:
+        logger = sb_manager.logger
+        db_url = sb_manager.sb_db_url
 
     if not db_url:
         if logger:
@@ -347,18 +348,18 @@ def get_sb_column_details(table: str,
     return return_bundle
 
 
-def run_sb_db_command(command: str,
-                      project=None,
+def run_db_command_psql(command: str,
+                      sb_manager=None,
                       db_url: Optional[Union[str, None]] = None,
                       logger: Optional[Union[logging.Logger, None]] = None) -> str | None:
     """
     Create a table on the Supabase database using psql.
 
-    Must send either `project` or `db_url and logger`
+    Must send either `sb_manager` or `db_url and logger`
 
     Args:
         `command`: The psql command to be executed.
-        `project (asaniczka.ProjectSetup, None)`: A project setup instance (optional).
+        `sb_manager (dbt.SupabaseManager, None)`: A SupabaseManager instance (optional).
         `db_url`: The database URL (optional).
         `logger`: A logger instance (optional).
 
@@ -370,9 +371,9 @@ def run_sb_db_command(command: str,
         `RuntimeError`: If the subprocess returns a non-zero exit code.
     """
 
-    if project:
-        logger = project.logger
-        db_url = project.sb_db_url
+    if sb_manager:
+        logger = sb_manager.logger
+        db_url = sb_manager.sb_db_url
 
     if not db_url:
         if logger:
@@ -394,17 +395,17 @@ def run_sb_db_command(command: str,
     print(completed_process.stdout)
 
 
-def backup_sb_db(project=None,
+def backup_db_psql(sb_manager=None,
                  db_url: Optional[Union[str, None]] = None,
                  dest_folder: Optional[Union[os.PathLike, None]] = None,
                  logger: Optional[Union[None, logging.Logger]] = None) -> None:
     """
     Creates a backup of the database to the given folder.
 
-    Must send either `asaniczka.ProjectSetup` or `db_url` and `dest_folder`.
+    Must send either `asaniczka.sb_managerSetup` or `db_url` and `dest_folder`.
 
     Args:
-        `project (asaniczka.ProjectSetup, None)`: A project setup instance (optional).
+        `sb_manager (asaniczka.sb_managerSetup, None)`: A sb_manager setup instance (optional).
         `db_url`: The database URL (optional).
         `dest_folder`: The destination folder to store the backup (optional).
         `logger`: A logger instance (optional).
@@ -414,9 +415,9 @@ def backup_sb_db(project=None,
 
     """
 
-    if project:
-        logger = project.logger
-        db_url = project.sb_db_url
+    if sb_manager:
+        logger = sb_manager.logger
+        db_url = sb_manager.sb_db_url
 
     if not db_url:
         if logger:
@@ -427,8 +428,8 @@ def backup_sb_db(project=None,
 
     time_right_now = datetime.datetime.now().strftime('%Y-%m-%d-%H-%M-%S')
 
-    if project:
-        dest_folder = os.path.join(project.project.db_folder, 'backups')
+    if sb_manager:
+        dest_folder = os.path.join(sb_manager.project.db_folder, 'backups')
     os.makedirs(dest_folder, exist_ok=True)
 
     schema_path = os.path.join(dest_folder, f"{time_right_now}_schema.sql")
@@ -453,24 +454,24 @@ def backup_sb_db(project=None,
         logger.info('Back up completed!')
 
 
-def run_backup_every_hour(project) -> None:
+def run_backup_every_hour(sb_manager) -> None:
     """
     Background task to run database backup every 6 hours.
 
     Args:
-        `project (asaniczka.ProjectSetup)`: A project setup instance.
+        `sb_manager (dbt.SupabaseManager)`: A SupabaseManager instance.
 
     """
 
     def do_sleep(time_to_sleep: int) -> None:
         time.sleep(time_to_sleep)
 
-    # time_to_sleep = 30*60  # sleep for 30 mins before starting
-    time_to_sleep = 0
-    while project.db_backup_loop:
+    time_to_sleep = 30*60  # sleep for 30 mins before starting
+
+    while sb_manager.db_backup_loop:
         if time_to_sleep < 1:
-            project.logger.info('Backing up the database')
-            backup_sb_db(project)
+            sb_manager.logger.info('Backing up the database')
+            backup_db_psql(sb_manager=sb_manager)
             time_to_sleep = 60*60
 
         do_sleep(10)  # sleep in 10 sec intervals
