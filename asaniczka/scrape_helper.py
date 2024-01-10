@@ -34,21 +34,15 @@ def send_request(url: str,
     Sends a request to the given URL.
 
     Args:
-        url (str): The URL to send the request to.
-        project (asaniczka.ProjectSetup): The project setup instance.
-        count_lock (Lock): The lock object for thread synchronization.
-        burst_data (dict): The burst data dictionary containing information about the number of requests made and rate limit.
-        pbar (Optional[tqdm]): The progress bar instance to track the requests. 
-            (default: None)
-        check (Optional[bool]): Whether to check the response status code. 
-            If True, the function will return the status code. If False, the function will update the burst data and return None. 
-            (default: True)
-        headers (Optional[dict]): The headers to include in the request. 
-            If None, default headers will be used. (default: None)
-        data (Optional[dict]): The data to include in the request body.
-            (default: None)
-        is_get (Optional[bool]): True if it is a GET request, False if it is a POST request. 
-            (default: True)
+        `url` : The URL to send the request to.
+        `project`: The project setup instance.
+        `count_lock`: The lock object for thread synchronization.
+        `burst_data`: The burst data dictionary containing information about the number of requests made and rate limit.
+        `pbar`: The progress bar instance to track the requests. (default: None)
+        `check`: Whether to check the response status code. If True, the function will return the status code. If False, the function will update the burst data and return None. (default: True)
+        `headers`: The headers to include in the request. If None, default headers will be used. (default: None)
+        `data`: The data to include in the request body.(default: None)
+        `is_get`: True if it is a GET request, False if it is a POST request. (default: True)
 
     Returns:
         None or int: If check is True, returns the response status code. If check is False, returns None.
@@ -108,17 +102,12 @@ def check_ratelimit(url: str,
     Use this function to check the ratelimit of a domain.
 
     Args:
-        url (str): The URL of the domain to check the ratelimit.
-        project (asaniczka.ProjectSetup): The project setup instance.
-        check (Optional[bool]): Whether to perform a check request. 
-            If True, the function will send a single request to check the status code of the URL. 
-            (default: True)
-        headers (Optional[dict]): The headers to include in the request. 
-            If None, default headers will be used. (default: None)
-        data (Optional[dict]): The data to include in the request body. 
-            (default: None)
-        is_get (Optional[bool]): True if it is a GET request, 
-            False if it is a POST request. (default: True)
+        `url`: The URL of the domain to check the ratelimit.
+        `project`: The project setup instance.
+        `check`: Whether to perform a check request. If True, the function will send a single request to check the status code of the URL.(default: True)
+        `headers`: The headers to include in the request. If None, default headers will be used. (default: None)
+        `data`: The data to include in the request body. (default: None)
+        `is_get`: True if it is a GET request, False if it is a POST request. (default: True)
 
     Returns:
         str: A message containing information about the ratelimit status.
@@ -201,8 +190,8 @@ def help_forge_cookies(url: str, project) -> None:
     Use this function to help identify cookie variables for forging cookies.
 
     Args:
-        `url (str)`: The URL to load in the browser and retrieve cookies from.
-        `project (asaniczka.ProjectSetup)`: The project setup object for saving temporary files.
+        `url`: The URL to load in the browser and retrieve cookies from.
+        `project`: The project setup object for saving temporary files.
 
     Example Usage:
         help_forge_cookies("https://example.com", project)

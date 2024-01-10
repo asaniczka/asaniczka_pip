@@ -46,7 +46,7 @@ class ProjectSetup:
     The paths to these folders can be accessed as instance attributes.
 
     Args:
-        `project_name (str)`: The name of the project.
+        `project_name`: The name of the project.
 
     Attributes:
         project_name
@@ -109,8 +109,8 @@ class ProjectSetup:
         """Return a temporary file name as a path.
 
         Args:
-            `name (str, optional)`: The file name. Defaults to random.
-            `extension (str, optional)`: The file extension to use. Defaults to 'txt'.
+            `name`: The file name. Defaults to random.
+            `extension`: The file extension to use. Defaults to 'txt'.
 
         Returns:
             Union[str, Path]: The path to the created temporary file.
@@ -135,8 +135,8 @@ class ProjectSetup:
         """log_file_path
 
         Args:
-            `dated (bool, optional)`: Whether to include the date in the file name. Defaults to False.
-            `utc (bool, optional)`: Whether to use UTC time instead of local time. Defaults to False.
+            `dated`: Whether to include the date in the file name. Defaults to False.
+            `utc`: Whether to use UTC time instead of local time. Defaults to False.
 
         Returns:
             Union[str, Path]: The path to the log file.
@@ -161,7 +161,7 @@ class ProjectSetup:
         """Remove symbols from a filename and return a sanitized version.
 
         Args:
-            `name (str)`: The filename to sanitize.
+            `name`: The filename to sanitize.
 
         Returns:
             str: The sanitized filename.
@@ -182,10 +182,9 @@ class ProjectSetup:
         Only use this for quick saves. For more complex uses, use `asaniczka.save_temp_file()`
 
         Args:
-            `content (str | set | list | dict)`: The content to be written to the temporary file. 
-                Lists,sets will be formatted with newlines
-            `extension (str)`: The file extension of the temporary file.
-            `file_name (str)`: The name of the temporary file.
+            `content`: The content to be written to the temporary file. Lists,sets will be formatted with newlines
+            `extension`: The file extension of the temporary file.
+            `file_name`: The name of the temporary file.
 
         Returns:
             None
@@ -225,8 +224,8 @@ class ProjectSetup:
         Calculates the elapsed time since starting the project.
 
         Args:
-            return_mins (bool, optional): Whether to return the time in minutes. Defaults to False.
-            full_decimals (bool, optional): Whether to return all decimal places of the time. Defaults to False.
+            `return_mins`: Whether to return the time in minutes. Defaults to False.
+            `full_decimals`: Whether to return all decimal places of the time. Defaults to False.
 
         Returns:
             float: The elapsed time in seconds if return_mins is False, or the elapsed time in minutes if return_mins is True.
@@ -383,10 +382,10 @@ class Timer:
     A simple timer class to measure elapsed time.
 
     Attributes:
-        start_time (float): The start time of the timer.
+        `start_time`: The start time of the timer.
 
     Methods:
-        lap(): Calculates the elapsed time since starting the timer.
+        `lap()`: Calculates the elapsed time since starting the timer.
 
     """
 
@@ -427,10 +426,10 @@ def setup_logger(log_file_path: str,
     """Set up a logger and return the logger instance.
 
     Args:
-        log_file_path (str): The path of the log file.
-        stream (bool): Whether to create a stream handler (default: True)
-        file (bool): Whether to create a file handler (default: True)
-        stream_level (str): level of stream handler. Must be valid logging level
+        `log_file_path` : The path of the log file.
+        `stream`: Whether to create a stream handler (default: True)
+        `file`: Whether to create a file handler (default: True)
+        `stream_level` : level of stream handler. Must be valid logging level
 
     Returns:
         logging.Logger: The configured logger instance.
@@ -481,11 +480,10 @@ def save_file(
     """Saves the given content to a temporary file in the specified temp folder.
 
     Args:
-        `temp_folder (str)`: The path to the temporary folder.
-        `content (str | set | list | dict)`: The content to be written to the temporary file. 
-            Lists,sets will be formatted with newlines
-        `file_name (str)`: The name of the temporary file.
-        `extension (str)`: The file extension of the temporary file.
+        `temp_folder`: The path to the temporary folder.
+        `content`: The content to be written to the temporary file. Lists,sets will be formatted with newlines
+        `file_name`: The name of the temporary file.
+        `extension`: The file extension of the temporary file.
 
     Returns:
         None
@@ -526,7 +524,7 @@ def format_error(error: str) -> str:
     Removes newlines from the given error string.
 
     Args:
-        `error (str)`: The error string to be formatted.
+        `error`: The error string to be formatted.
 
     Returns:
         str: The formatted error string.
@@ -552,11 +550,10 @@ def get_request(
     Makes a basic HTTP GET request to the given URL.
 
     Args:
-        `url (str)`: The URL to make the request to.
-        `logger (Optional:None, logging.Logger)`: The logger instance to log warnings. 
-                (default: None)
-        `logger_level_debug (Optional:bool)`: Whether to log warnings at debug level. 
-                (default: False)
+        `url`: The URL to make the request to.
+        `silence_errors`: Will not raise any exceptions. Use logger_level_debug to supress errors in the console
+        `logger: The logger instance to log warnings. 
+        `logger_level_debug`: Whether to log warnings at debug level. 
 
     Returns:
         str: The content of the response if the request was successful.
@@ -647,7 +644,7 @@ def steal_cookies(url: str) -> dict:
     Gets cookies from a given domain.
 
     Args:
-        `url (str)`: The URL from which to steal cookies.
+        `url`: The URL from which to steal cookies.
 
     Returns:
         `dict`: A dictionary containing the stolen cookies, where the keys are the cookie names and the values are the cookie values.

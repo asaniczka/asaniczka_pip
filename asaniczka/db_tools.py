@@ -25,7 +25,7 @@ def check_psql_installation(logger: Optional[Union[None, logging.Logger]] = None
     Default checker to see if psql is installed.
 
     Args:
-        `logger (None, logging.Logger)`: The logger object to use for logging. Defaults to None.
+        `logger`: The logger object to use for logging. Defaults to None.
 
     Returns:
         `None`
@@ -54,8 +54,8 @@ def psql_subprocess_executor(command: str, db_url: str) -> subprocess.CompletedP
     General try-except wrapper for executing psql commands via subprocess.
 
     Args:
-        `command (str)`: The psql command to be executed.
-        `db_url (str)`: The database URL.
+        `command`: The psql command to be executed.
+        `db_url`: The database URL.
 
     Returns:
         `subprocess.CompletedProcess`: The completed subprocess information.
@@ -82,9 +82,9 @@ def get_sb_table_names(project=None,
 
     Args:
         `project (asaniczka.ProjectSetup | None)`: The project setup object. Defaults to None.
-        `db_url (str | None)`: The database URL. Defaults to None.
-        `logger (logging.Logger | None)`: The logger object to use for logging. Defaults to None.
-        `make_list (bool)`: Whether to return the table names as a list or a string. Defaults to False.
+        `db_url`: The database URL. Defaults to None.
+        `logger`: The logger object to use for logging. Defaults to None.
+        `make_list`: Whether to return the table names as a list or a string. Defaults to False.
 
     Returns:
         `str | list`: The table names.
@@ -141,10 +141,10 @@ def get_sb_column_details(table: str,
     Must send either `project` or `db_url and logger`
 
     Args:
-        `table (str)`: The name of the table.
+        `table`: The name of the table.
         `project (asaniczka.ProjectSetup, None)`: A project setup instance (optional).
-        `db_url (str, None)`: The database URL (optional).
-        `logger (logging.Logger, None)`: A logger instance (optional).
+        `db_url`: The database URL (optional).
+        `logger`: A logger instance (optional).
 
     Returns:
         `str`: The column details of the specified table.
@@ -193,10 +193,10 @@ def run_sb_db_command(command: str,
     Must send either `project` or `db_url and logger`
 
     Args:
-        `command (str)`: The psql command to be executed.
+        `command`: The psql command to be executed.
         `project (asaniczka.ProjectSetup, None)`: A project setup instance (optional).
-        `db_url (str, None)`: The database URL (optional).
-        `logger (logging.Logger, None)`: A logger instance (optional).
+        `db_url`: The database URL (optional).
+        `logger`: A logger instance (optional).
 
     Returns:
         `str | None`: The output of the command execution.
@@ -241,9 +241,9 @@ def backup_sb_db(project=None,
 
     Args:
         `project (asaniczka.ProjectSetup, None)`: A project setup instance (optional).
-        `db_url (str, None)`: The database URL (optional).
-        `dest_folder (os.PathLike, None)`: The destination folder to store the backup (optional).
-        `logger (None, logging.Logger)`: A logger instance (optional).
+        `db_url`: The database URL (optional).
+        `dest_folder`: The destination folder to store the backup (optional).
+        `logger`: A logger instance (optional).
 
     Raises:
         `AttributeError`: If no database URL is provided.
