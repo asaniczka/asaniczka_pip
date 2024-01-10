@@ -32,6 +32,9 @@ class SupabaseManager:
     """
 
     def __init__(self, project) -> None:
+        if not project:
+            raise AttributeError('Please send asaniczka.ProjectSetup')
+        
         self.project = project
         self.sb_api_url = None
         self.sb_db_url = None
