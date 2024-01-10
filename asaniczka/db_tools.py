@@ -1,7 +1,7 @@
 """
 This module provides functions to interact with a PostgreSQL database using the `psql` command.
 
-Functions:
+## Functions:
 - check_psql_installation()
 - psql_subprocess_executor()
 - get_sb_table_names()
@@ -9,6 +9,9 @@ Functions:
 - run_sb_db_command()
 - backup_sb_db()
 - run_backup_every_6_hours()
+
+## Classes
+- SupabaseManager
 """
 
 import subprocess
@@ -17,7 +20,165 @@ from typing import Optional, Union
 import logging
 import datetime
 import time
+import threading
+import random
 import asaniczka
+
+
+class SupabaseManager:
+    """This is a wrapper for the supabase cli
+
+    project is asaniczka.ProjectSetup
+    """
+
+    def __init__(self, project) -> None:
+        self.project = project
+        self.sb_api_url = None
+        self.sb_db_url = None
+        self.sb_studio_url = None
+        self.sb_anon_key = None
+        self.db_backup_loop = False
+
+    def check_supabase_cli_installation(self) -> None:
+        """function checks if supabase cli is installed on the system"""
+        # pylint: disable=bare-except
+        try:
+            _ = subprocess.run('supabase', shell=True,
+                               check=True, capture_output=True)
+            is_supabase_installed = True
+        except:
+            is_supabase_installed = False
+
+        if not is_supabase_installed:
+            self.project.logger.critical(
+                "Asaniczka can't launch Supabase. You need to install supabase first. \nhttps://supabase.com/docs/guides/cli/getting-started")
+            raise RuntimeError(
+                "Asaniczka can't launch Supabase. You need to install supabase first. \nhttps://supabase.com/docs/guides/cli/getting-started")
+
+    def initialize_supabase(self, config_file_path: os.PathLike) -> None:
+        """Initalizes supabase for the current project"""
+        self.project.logger.info("Creating supabase config")
+        # initialize the project setup
+        process = subprocess.Popen(['supabase', 'init'], stdout=subprocess.PIPE,
+                                   stdin=subprocess.PIPE, stderr=subprocess.PIPE, cwd=self.project.db_folder)
+
+        _ = process.communicate(input=b'n\n')
+
+        # replace standard supabase ports with random ports to avoid clashes with other db instances
+        with open(config_file_path, 'r+', encoding='utf-8') as config_file:
+            lines = config_file.readlines()
+            lines = [line.strip() for line in lines]
+            lines = [line.replace(
+                'project_id = "databases"', f'project_id = "{self.project.project_name}"') for line in lines]
+            ports_to_replace = [54320,  54321, 54322,
+                                54323, 54324, 54325, 54326,  54327, 54328,
+                                54329, 54330]
+
+            new_port_start = random.randint(20000, 50000)
+            self.project.logger.debug(
+                f"supabase port start value is: {new_port_start}")
+            new_ports_list = []
+            for idx, port in enumerate(ports_to_replace):
+                new_ports_list.append(new_port_start+idx)
+
+            modified_lines = []
+            for line in lines:
+                for idx, port in enumerate(ports_to_replace):
+                    line = line.replace(
+                        str(port), str(new_ports_list[idx]))
+                modified_lines.append(line)
+
+            config_file.seek(0)
+            config_file.write('\n'.join(modified_lines))
+            config_file.truncate()
+
+    def start_supabase_instance(self, debug=False) -> None:
+        """Call this function to start a supabase database"""
+        self.project.logger.info('Starting Supabase')
+
+        config_file_path = os.path.join(
+            self.project.db_folder, 'supabase', 'config.toml')
+
+        if not os.path.exists(config_file_path):
+            self.initialize_supabase(config_file_path)
+
+        self.stop_supabase_instance(no_log=True, debug=debug)
+        if not debug:
+            try:
+                db_start_response = subprocess.run(
+                    'supabase start',
+                    shell=True,
+                    check=True,
+                    cwd=self.project.db_folder,
+                    capture_output=True,
+                    text=True)
+            except subprocess.CalledProcessError as error:
+                error_message = error.stderr
+                self.project.logger.critical(
+                    f"Error when starting db: {asaniczka.format_error(error_message)}")
+                raise RuntimeError("Error when starting db") from error
+        else:
+            subprocess.run(
+                'supabase start', shell=True, check=True, cwd=self.project.db_folder, text=True)
+
+            self.project.logger.critical(
+                "You have selected to launch Supabase in debug mode. Asaniczka module can't access any db functions. Please run without debug flag.")
+
+        # extract supabase endpoints
+        if not debug:
+            db_start_response_lines = db_start_response.stdout.split('\n')
+            for line in db_start_response_lines:
+                if 'API URL' in line:
+                    self.sb_api_url = line.split(':', maxsplit=1)[-1].strip()
+                if 'DB URL' in line:
+                    self.sb_db_url = line.split(':', maxsplit=1)[-1].strip()
+                if 'Studio URL' in line:
+                    self.sb_studio_url = line.split(
+                        ':', maxsplit=1)[-1].strip()
+                    self.project.logger.info(
+                        f"Supabase STUDIO URL: {self.sb_studio_url}")
+                if 'anon key' in line:
+                    self.sb_anon_key = line.split(':', maxsplit=1)[-1].strip()
+
+            self.db_backup_loop = True
+            background_backup = threading.Thread(
+                target=run_backup_every_hour, args=[self])
+            background_backup.start()
+
+    def stop_supabase_instance(self, no_log=False, debug=False) -> None:
+        """Use this to stop any running supabase instances"""
+
+        if not no_log:
+            self.project.logger.info('Stopping any supabase instance')
+
+        self.db_backup_loop = False  # stop backup if running
+        try:
+            if not debug:
+                _ = subprocess.run(
+                    'supabase stop',
+                    shell=True,
+                    check=True,
+                    cwd=self.project.db_folder,
+                    capture_output=True)
+            else:
+                subprocess.run(
+                    'supabase stop', shell=True, check=True, cwd=self.project.db_folder, )
+
+            self.sb_api_url = None
+            self.sb_db_url = None
+            self.sb_studio_url = None
+            self.sb_anon_key = None
+
+            if not no_log:
+                self.project.logger.info(
+                    "Supabase stopped sucessfully. Might take around 10 sec for bg tasks to finish")
+
+        except subprocess.CalledProcessError as error:
+            stderr_output = error.stderr.decode('utf-8')
+            self.project.logger.critical(
+                f"Unable to stop supabase. Error: {asaniczka.format_error(stderr_output)}")
+            raise RuntimeError(
+                "Unable to stop Supabase. Are you sure Docker is running?") from error
 
 
 def check_psql_installation(logger: Optional[Union[None, logging.Logger]] = None) -> None:
@@ -264,7 +425,7 @@ def backup_sb_db(project=None,
     time_right_now = datetime.datetime.now().strftime('%Y-%m-%d-%H-%M-%S')
 
     if project:
-        dest_folder = os.path.join(project.db_folder, 'backups')
+        dest_folder = os.path.join(project.project.db_folder, 'backups')
     os.makedirs(dest_folder, exist_ok=True)
 
     schema_path = os.path.join(dest_folder, f"{time_right_now}_schema.sql")

@@ -26,8 +26,6 @@ import random
 import datetime
 import re
 import json
-import subprocess
-import threading
 
 import pytz
 import requests
@@ -41,9 +39,6 @@ import asaniczka.db_tools as dbt
 
 class ProjectSetup:
     """A class that sets up project folders and provides access to their paths.
-
-    This class sets up the project folder, data folder, temp folder, log folder, and log file path for a given project.
-    The paths to these folders can be accessed as instance attributes.
 
     Args:
         `project_name`: The name of the project.
@@ -90,11 +85,6 @@ class ProjectSetup:
         self.db_folder = self.create_folder(self.project_folder, 'databases')
         self.start_time = time.time()
         self.logger = setup_logger(self.generate_log_file_path(dated=True))
-        self.sb_api_url = None
-        self.sb_db_url = None
-        self.sb_studio_url = None
-        self.sb_anon_key = None
-        self.db_backup_loop = False
 
     def create_folder(self, parent: os.PathLike, child: str) -> os.PathLike:
         """Create a folder in the given parent directory"""
@@ -242,140 +232,6 @@ class ProjectSetup:
 
         return elapsed_time
 
-    def check_supabase_cli_installation(self) -> None:
-        """function checks if supabase cli is installed on the system"""
-
-        # check if supabase  cli is installed
-        # pylint: disable=bare-except
-        try:
-            _ = subprocess.run('supabase', shell=True,
-                               check=True, capture_output=True)
-            is_supabase_installed = True
-        except:
-            is_supabase_installed = False
-
-        if not is_supabase_installed:
-            self.logger.critical(
-                "Asaniczka can't launch Supabase. You need to install supabase first. \nhttps://supabase.com/docs/guides/cli/getting-started")
-            raise RuntimeError(
-                "Asaniczka can't launch Supabase. You need to install supabase first. \nhttps://supabase.com/docs/guides/cli/getting-started")
-
-    def initialize_supabase(self, config_file_path: os.PathLike) -> None:
-        """Initalizes supabase for the current project"""
-        self.logger.info("Creating supabase config")
-        # initialize the project setup
-        process = subprocess.Popen(['supabase', 'init'], stdout=subprocess.PIPE,
-                                   stdin=subprocess.PIPE, stderr=subprocess.PIPE, cwd=self.db_folder)
-
-        _ = process.communicate(input=b'n\n')
-
-        # replace standard supabase ports with random ports to avoid clashes with other db instances
-        with open(config_file_path, 'r+', encoding='utf-8') as config_file:
-            lines = config_file.readlines()
-            lines = [line.strip() for line in lines]
-            lines = [line.replace(
-                'project_id = "databases"', f'project_id = "{self.project_name}"') for line in lines]
-            ports_to_replace = [54320,  54321, 54322,
-                                54323, 54324, 54325, 54326,  54327, 54328,
-                                54329, 54330]
-
-            new_port_start = random.randint(20000, 50000)
-            self.logger.debug(
-                f"supabase port start value is: {new_port_start}")
-            new_ports_list = []
-            for idx, port in enumerate(ports_to_replace):
-                new_ports_list.append(new_port_start+idx)
-
-            modified_lines = []
-            for line in lines:
-                for idx, port in enumerate(ports_to_replace):
-                    line = line.replace(
-                        str(port), str(new_ports_list[idx]))
-                modified_lines.append(line)
-
-            config_file.seek(0)
-            config_file.write('\n'.join(modified_lines))
-            config_file.truncate()
-
-    def start_supabase_instance(self, debug=False) -> None:
-        """Call this function to start a supabase database"""
-        self.logger.info('Starting Supabase')
-
-        config_file_path = os.path.join(
-            self.db_folder, 'supabase', 'config.toml')
-
-        if not os.path.exists(config_file_path):
-            self.initialize_supabase(config_file_path)
-
-        self.stop_supabase_instance(no_log=True, debug=debug)
-        if not debug:
-            try:
-                db_start_response = subprocess.run(
-                    'supabase start', shell=True, check=True, cwd=self.db_folder, capture_output=True, text=True)
-            except subprocess.CalledProcessError as error:
-                error_message = error.stderr
-                self.logger.critical(
-                    f"Error when starting db: {format_error(error_message)}")
-                raise RuntimeError("Error when starting db") from error
-        else:
-            subprocess.run(
-                'supabase start', shell=True, check=True, cwd=self.db_folder, text=True)
-
-            self.logger.critical(
-                "You have selected to launch Supabase in debug mode. Asaniczka module can't access any db functions. Please run without debug flag.")
-
-        # extract supabase endpoints
-        if not debug:
-            db_start_response_lines = db_start_response.stdout.split('\n')
-            for line in db_start_response_lines:
-                if 'API URL' in line:
-                    self.sb_api_url = line.split(':', maxsplit=1)[-1].strip()
-                if 'DB URL' in line:
-                    self.sb_db_url = line.split(':', maxsplit=1)[-1].strip()
-                if 'Studio URL' in line:
-                    self.sb_studio_url = line.split(
-                        ':', maxsplit=1)[-1].strip()
-                    self.logger.info(
-                        f"Supabase STUDIO URL: {self.sb_studio_url}")
-                if 'anon key' in line:
-                    self.sb_anon_key = line.split(':', maxsplit=1)[-1].strip()
-
-            self.db_backup_loop = True
-            background_backup = threading.Thread(
-                target=dbt.run_backup_every_hour, args=[self])
-            background_backup.start()
-
-    def stop_supabase_instance(self, no_log=False, debug=False) -> None:
-        """Use this to stop any running supabase instances"""
-
-        if not no_log:
-            self.logger.info('Stopping any supabase instance')
-
-        self.db_backup_loop = False  # stop backup if running
-        try:
-            if not debug:
-                _ = subprocess.run(
-                    'supabase stop', shell=True, check=True, cwd=self.db_folder, capture_output=True)
-            else:
-                subprocess.run(
-                    'supabase stop', shell=True, check=True, cwd=self.db_folder, )
-
-            self.sb_api_url = None
-            self.sb_db_url = None
-            self.sb_studio_url = None
-            self.sb_anon_key = None
-
-            if not no_log:
-                self.logger.info(
-                    "Supabase stopped sucessfully. Might take around 10 sec for bg tasks to finish")
-
-        except subprocess.CalledProcessError as error:
-            stderr_output = error.stderr.decode('utf-8')
-            self.logger.critical(
-                f"Unable to stop supabase. Error: {format_error(stderr_output)}")
-            raise RuntimeError(
-                "Unable to stop Supabase. Are you sure Docker is running?") from error
-
 
 class Timer:
     """
@@ -397,8 +253,8 @@ class Timer:
         Calculates the elapsed time since starting the timer.
 
         Args:
-            return_mins (bool, optional): Whether to return the time in minutes. Defaults to False.
-            full_decimals (bool, optional): Whether to return all decimal places of the time. Defaults to False.
+            `return_mins`: Whether to return the time in minutes. Defaults to False.
+            `full_decimals`: Whether to return all decimal places of the time. Defaults to False.
 
         Returns:
             float: The elapsed time in seconds if return_mins is False, or the elapsed time in minutes if return_mins is True.
@@ -603,7 +459,9 @@ def get_request(
                     Status code %d, Response text: %s',
                     response.status_code, format_error(response.text))
 
-        if response.status_code == 420 or response.status_code == 429 or response.status_code >= 500:
+        if response.status_code == 420 \
+                or response.status_code == 429 \
+                or response.status_code >= 500:
             # sleep 1 second and incrase retries
             time.sleep(5)
             retries += 1
