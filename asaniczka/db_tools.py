@@ -237,9 +237,9 @@ def psql_subprocess_executor(command: str, db_url: str) -> subprocess.CompletedP
 
 
 def get_table_names_psql(sb_manager=None,
-                       db_url: Optional[Union[str, None]] = None,
-                       logger: Optional[Union[logging.Logger, None]] = None,
-                       make_list=False) -> str | list:
+                         db_url: Optional[Union[str, None]] = None,
+                         logger: Optional[Union[logging.Logger, None]] = None,
+                         make_list=False) -> str | list:
     """
     Get a list of all tables inside the database.
 
@@ -297,9 +297,9 @@ def get_table_names_psql(sb_manager=None,
 
 
 def get_column_details_psql(table: str,
-                          sb_manager=None,
-                          db_url: Optional[Union[str, None]] = None,
-                          logger: Optional[Union[logging.Logger, None]] = None) -> str:
+                            sb_manager=None,
+                            db_url: Optional[Union[str, None]] = None,
+                            logger: Optional[Union[logging.Logger, None]] = None) -> str:
     """
     Query Column names and data types of the provided table.
 
@@ -331,7 +331,7 @@ def get_column_details_psql(table: str,
 
     check_psql_installation(logger)
 
-    command = f"SELECT column_name, data_type FROM information_schema.columns WHERE table_schema = 'public' AND table_name = '{table}';"
+    command = f"SELECT column_name, data_type, column_default, is_nullable FROM information_schema.columns WHERE table_schema = 'public' AND table_name = '{table}';"
 
     completed_process = psql_subprocess_executor(command, db_url)
 
@@ -349,9 +349,9 @@ def get_column_details_psql(table: str,
 
 
 def run_db_command_psql(command: str,
-                      sb_manager=None,
-                      db_url: Optional[Union[str, None]] = None,
-                      logger: Optional[Union[logging.Logger, None]] = None) -> str | None:
+                        sb_manager=None,
+                        db_url: Optional[Union[str, None]] = None,
+                        logger: Optional[Union[logging.Logger, None]] = None) -> str | None:
     """
     Create a table on the Supabase database using psql.
 
@@ -396,9 +396,9 @@ def run_db_command_psql(command: str,
 
 
 def backup_db_psql(sb_manager=None,
-                 db_url: Optional[Union[str, None]] = None,
-                 dest_folder: Optional[Union[os.PathLike, None]] = None,
-                 logger: Optional[Union[None, logging.Logger]] = None) -> None:
+                   db_url: Optional[Union[str, None]] = None,
+                   dest_folder: Optional[Union[os.PathLike, None]] = None,
+                   logger: Optional[Union[None, logging.Logger]] = None) -> None:
     """
     Creates a backup of the database to the given folder.
 
