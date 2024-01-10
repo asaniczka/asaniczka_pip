@@ -17,7 +17,7 @@ from typing import Optional, Union
 import logging
 import datetime
 import time
-import asaniczka.main as asaniczka
+import asaniczka
 
 
 def check_psql_installation(logger: Optional[Union[None, logging.Logger]] = None) -> None:

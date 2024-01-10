@@ -14,7 +14,6 @@ The Asaniczka module provides quick functions to get up and running with a scrap
 ## Available Classes:
 
 1. `ProjectSetup`: A class that sets up project folders and provides access to their paths.
-2.
 
 ## Installation
 
@@ -29,9 +28,9 @@ Remember to run `playwright install` on cmd/terminal after installation to insta
 ## Usage
 
 ```python
-import asaniczka.main as asaniczka
+import asaniczka
 import asaniczka.db_tools as dbt
-import asaniczka.scraper_helper as ash
+import asaniczka.scrape_helper as ash
 
 # Create project folders
 project = asaniczka.ProjectSetup("MyProject")
@@ -51,5 +50,19 @@ response = asaniczka.get_request(url)
 # Create a new directory
 my_dir = asaniczka.create_dir(os.path.join(project.data_folder,'my_data'))
 
+# check the ratelimit of a website
+rate_limit = ash.check_ratelimit('https://amazon.com')
+
+# load a postgres db
+project.start_supabase_instance()
+
+# get all the names of tables in the db
+table_names = dbt.get_sb_table_names(project, make_list=True)
+
+# backup supabase postgres db
+dbt.backup_sb_db(project)
+
+# shutdown database
+project.stop_supabase_instance()
 
 ```
