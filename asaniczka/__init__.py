@@ -375,7 +375,7 @@ class ProjectSetup:
             self.logger.critical(
                 f"Unable to stop supabase. Error: {format_error(stderr_output)}")
             raise RuntimeError(
-                "Unable to stop Supabase. Are you sure Docker is running? ") from error
+                "Unable to stop Supabase. Are you sure Docker is running?") from error
 
 
 class Timer:
@@ -452,7 +452,7 @@ def setup_logger(log_file_path: str,
     logger.setLevel(logging.DEBUG)  # set the logging level to debug
 
     log_format = logging.Formatter(
-        '%(asctime)s :  %(module)s  :   %(levelname)s   :   %(message)s')
+        '%(asctime)s :   %(levelname)s   :  %(module)s  :   %(message)s')
 
     # init the console logger
     if stream:
