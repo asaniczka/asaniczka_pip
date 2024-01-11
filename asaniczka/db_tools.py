@@ -147,13 +147,15 @@ class SupabaseManager:
                 if 'anon key' in line:
                     self.sb_anon_key = line.split(':', maxsplit=1)[-1].strip()
 
-                self.client = create_client(
-                    self.sb_db_url, self.sb_anon_key)
+                self.sb_client = create_client(
+                    self.sb_api_url, self.sb_anon_key)
 
             self.db_backup_loop = True
             background_backup = threading.Thread(
                 target=run_backup_every_hour, args=[self])
             background_backup.start()
+
+        self.logger.info('Supabase started sucessfully!')
 
     def stop_supabase_instance(self, no_log=False, debug=False) -> None:
         """Use this to stop any running supabase instances"""
