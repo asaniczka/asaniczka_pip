@@ -163,7 +163,7 @@ class ProjectSetup:
 
     def save_temp_file(self,
                        content: str | set | list | dict,
-                       extionsion: Optional[Union[None, str]] = None,
+                       extension: Optional[Union[None, str]] = None,
                        file_name: Optional[Union[None, str]] = None) -> None:
         """Saves the given content to a temporary file in the specified temp folder.
 
@@ -182,26 +182,28 @@ class ProjectSetup:
         # format the content to a string
         if isinstance(content, list):
             string_content = '\n'.join([str(item) for item in content])
-            if not extionsion:
-                extionsion = 'txt'
+            if not extension:
+                extension = 'txt'
         elif isinstance(content, set):
             string_content = '\n'.join([str(item) for item in content])
-            if not extionsion:
-                extionsion = 'txt'
+            if not extension:
+                extension = 'txt'
         elif isinstance(content, dict):
             string_content = json.dumps(content)
-            if not extionsion:
-                extionsion = 'json'
+            if not extension:
+                extension = 'json'
         else:
             string_content = content
-            if not extionsion:
-                extionsion = 'txt'
+            if not extension:
+                extension = 'txt'
 
         if not file_name:
-            file_name = f"{str(datetime.datetime.now().date)}_{''.join(random.choices(string.ascii_lowercase, k=20))}"
+            file_name = f"{str(datetime.datetime.now().date())}_{''.join(random.choices(string.ascii_lowercase, k=20))}"
+
+        extension = extension.replace('.', '')
 
         # now save the temp file
-        with open(os.path.join(self.temp_folder, f'{file_name}.{extionsion}'),
+        with open(os.path.join(self.temp_folder, f'{file_name}.{extension}'),
                   'w', encoding='utf-8') as temp_file:
             temp_file.write(string_content)
 
@@ -399,7 +401,8 @@ def get_request(
         url: str,
         silence_errors: bool = False,
         logger: Optional[Union[None, logging.Logger]] = None,
-        logger_level_debug: Optional[bool] = False,) -> str | None:
+        logger_level_debug: Optional[bool] = False,
+        proxy: Union[str, None] = None) -> str | None:
     """
     Makes a basic HTTP GET request to the given URL.
 
@@ -408,6 +411,7 @@ def get_request(
         `silence_errors`: Will not raise any exceptions. Use logger_level_debug to supress errors in the console
         `logger: The logger instance to log warnings. 
         `logger_level_debug`: Whether to log warnings at debug level. 
+        `proxy`: proxy to use
 
     Returns:
         str: The content of the response if the request was successful.
@@ -425,7 +429,14 @@ def get_request(
             'User-Agent': 'Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:109.0) Gecko/20100101 Firefox/119.0'
         }
         try:
-            response = requests.get(url, headers=headers, timeout=10)
+            if proxy:
+                response = requests.get(
+                    url, headers=headers, timeout=10, proxies={
+                        'http': proxy,
+                        'https': proxy
+                    })
+            else:
+                response = requests.get(url, headers=headers, timeout=10)
         # pylint: disable=broad-except
         except Exception as error:
             if logger_level_debug:

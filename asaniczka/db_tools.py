@@ -109,7 +109,7 @@ class SupabaseManager:
         if not os.path.exists(config_file_path):
             self.initialize_supabase(config_file_path)
 
-        self.stop_supabase_instance(no_log=True, debug=debug)
+        self.stop_supabase_instance(no_log=True, debug=debug, backup=False)
         if not debug:
             try:
                 db_start_response = subprocess.run(
@@ -157,13 +157,15 @@ class SupabaseManager:
 
         self.logger.info('Supabase started sucessfully!')
 
-    def stop_supabase_instance(self, no_log=False, debug=False) -> None:
+    def stop_supabase_instance(self, no_log=False, debug=False, backup=True) -> None:
         """Use this to stop any running supabase instances"""
 
         if not no_log:
             self.project.logger.info('Stopping any supabase instance')
 
         self.db_backup_loop = False  # stop backup if running
+        if backup:
+            backup_db_psql(self)
         try:
             if not debug:
                 _ = subprocess.run(
