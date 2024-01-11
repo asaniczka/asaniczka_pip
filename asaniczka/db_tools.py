@@ -198,8 +198,8 @@ class SupabaseManager:
                          data_dict: dict,
                          table_name: str,
                          return_minimal: Optional[bool] = True,
-                         supress_errors: Optional[bool] = True,
-                         supress_logs=False) -> None | supabase.PostgrestAPIResponse:
+                         suppress_errors: Optional[bool] = True,
+                         suppress_logs=False) -> None | supabase.PostgrestAPIResponse:
         """Function will run an insert query with the given data to the table via supabase api"""
         try:
             data = self.sb_client.table(table_name)\
@@ -207,10 +207,10 @@ class SupabaseManager:
                 .execute()
         # pylint:disable=broad-except
         except Exception as error:
-            if not supress_logs:
+            if not suppress_logs:
                 self.logger.error(
                     f'Error when inserting to {table_name}:    {asaniczka.format_error(error)}')
-            if not supress_errors:
+            if not suppress_errors:
                 raise RuntimeError(
                     f'Error when inserting to db: {asaniczka.format_error(error)}') from error
 
