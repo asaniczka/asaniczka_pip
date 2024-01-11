@@ -23,6 +23,8 @@ import time
 import threading
 import random
 import asaniczka
+import supabase
+from supabase import Client, create_client
 
 
 class SupabaseManager:
@@ -42,6 +44,7 @@ class SupabaseManager:
         self.sb_studio_url = None
         self.sb_anon_key = None
         self.db_backup_loop = False
+        self.sb_client: Client = None
 
     def check_supabase_cli_installation(self) -> None:
         """function checks if supabase cli is installed on the system"""
@@ -144,6 +147,9 @@ class SupabaseManager:
                 if 'anon key' in line:
                     self.sb_anon_key = line.split(':', maxsplit=1)[-1].strip()
 
+                self.client = create_client(
+                    self.sb_db_url, self.sb_anon_key)
+
             self.db_backup_loop = True
             background_backup = threading.Thread(
                 target=run_backup_every_hour, args=[self])
@@ -183,6 +189,28 @@ class SupabaseManager:
                 f"Unable to stop supabase. Error: {asaniczka.format_error(stderr_output)}")
             raise RuntimeError(
                 "Unable to stop Supabase. Are you sure Docker is running?") from error
+
+    def insert_row_to_db(self,
+                         data_dict: dict,
+                         table_name: str,
+                         return_minimal: Optional[bool] = True,
+                         supress_errors: Optional[bool] = True) -> None | supabase.PostgrestAPIResponse:
+        """Function will run an insert query with the given data to the table via supabase api"""
+        try:
+            data = self.sb_client.table(table_name)\
+                .insert(data_dict, returning='minimal')\
+                .execute()
+        # pylint:disable=broad-except
+        except Exception as error:
+            self.logger.error(
+                f'Error when inserting to {table_name}:    {asaniczka.format_error(error)}')
+            if not supress_errors:
+                raise RuntimeError(
+                    f'Error when inserting to db: {asaniczka.format_error(error)}') from error
+
+        if not return_minimal:
+            return data
+        return None
 
 
 def check_psql_installation(logger: Optional[Union[None, logging.Logger]] = None) -> None:

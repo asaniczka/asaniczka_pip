@@ -7,6 +7,7 @@ Get started with `from asaniczka import scraper_helper as helper`
 
 1. help_forge_cookies()
 2. check_ratelimit()
+3. steal_cookies()
 
 """
 
@@ -226,3 +227,40 @@ def help_forge_cookies(url: str, project) -> None:
 
         print()
         print('COOKIES SAVED. Please check temp folder :)')
+
+
+def steal_cookies(url: str) -> dict:
+    """
+    Gets cookies from a given domain.
+
+    Args:
+        `url`: The URL from which to steal cookies.
+
+    Returns:
+        `dict`: A dictionary containing the stolen cookies, where the keys are the cookie names and the values are the cookie values.
+
+    Raises:
+        RuntimeError: If an error occurs when stealing the cookies.
+
+    Example Usage:
+        `cookies = ash.steal_cookies("https://example.com")`
+    """
+
+    try:
+        with sync_playwright() as pw:
+            browser = pw.chromium.launch()
+            page = browser.new_page()
+            page.goto(url)
+
+            cookies = page.context.cookies()
+
+        stolen_cookie_dict = {}
+        if cookies:
+            for cookie in cookies:
+                stolen_cookie_dict[cookie['name']] = cookie['value']
+
+        return stolen_cookie_dict
+
+    except Exception as error:
+        raise RuntimeError(
+            f'Error when stealing cookies. Please inform developer (asaniczka@gmail.com) of this error as this error is not handled. \n{asaniczka.format_error(error)}') from error
