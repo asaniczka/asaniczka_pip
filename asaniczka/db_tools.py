@@ -147,8 +147,8 @@ class SupabaseManager:
                 if 'anon key' in line:
                     self.sb_anon_key = line.split(':', maxsplit=1)[-1].strip()
 
-                self.sb_client = create_client(
-                    self.sb_api_url, self.sb_anon_key)
+            self.sb_client = create_client(
+                self.sb_api_url, self.sb_anon_key)
 
             self.db_backup_loop = True
             background_backup = threading.Thread(
