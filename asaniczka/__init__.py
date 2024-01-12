@@ -431,12 +431,12 @@ def get_request(
         try:
             if proxy:
                 response = requests.get(
-                    url, headers=headers, timeout=10, proxies={
+                    url, headers=headers, timeout=45, proxies={
                         'http': proxy,
                         'https': proxy
                     })
             else:
-                response = requests.get(url, headers=headers, timeout=10)
+                response = requests.get(url, headers=headers, timeout=45)
         # pylint: disable=broad-except
         except Exception as error:
             if logger_level_debug:
