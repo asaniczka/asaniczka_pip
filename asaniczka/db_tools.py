@@ -143,10 +143,19 @@ class SupabaseManager:
                 if 'Studio URL' in line:
                     self.sb_studio_url = line.split(
                         ':', maxsplit=1)[-1].strip()
-                    self.project.logger.info(
-                        f"Supabase STUDIO URL: {self.sb_studio_url}")
                 if 'anon key' in line:
                     self.sb_anon_key = line.split(':', maxsplit=1)[-1].strip()
+
+                items_to_log = {
+                    'API URL': self.sb_api_url,
+                    'DB URL': self.sb_db_url,
+                    'Studio URL': self.sb_studio_url,
+                    'anon key': self.sb_studio_url
+                }
+
+                for key, value in items_to_log.items():
+                    self.project.logger.info(
+                        f"Supabase {key}: {value}")
 
             self.sb_client = create_client(
                 self.sb_api_url, self.sb_anon_key)
