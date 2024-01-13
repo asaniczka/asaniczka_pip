@@ -279,7 +279,8 @@ def setup_logger(log_file_path: str,
                  stream=True,
                  file=True,
                  stream_level='INFO',
-                 file_level='DEBUG') -> logging:
+                 file_level='DEBUG',
+                 disable_root_logger=True) -> logging:
     """Set up a logger and return the logger instance.
 
     Args:
@@ -287,6 +288,7 @@ def setup_logger(log_file_path: str,
         `stream`: Whether to create a stream handler (default: True)
         `file`: Whether to create a file handler (default: True)
         `stream_level` : level of stream handler. Must be valid logging level
+        `disable_root_logger`: Set the root logger to critical only
 
     Returns:
         logging.Logger: The configured logger instance.
@@ -304,8 +306,12 @@ def setup_logger(log_file_path: str,
         "critical": 50
     }
 
-    logger = logging.getLogger(__name__)
+    logger = logging.getLogger('asaniczka')
     logger.setLevel(logging.DEBUG)  # set the logging level to debug
+
+    if disable_root_logger:
+        root_logger = logging.getLogger(__name__)
+        root_logger.setLevel(logging.CRITICAL)
 
     log_format = logging.Formatter(
         '%(asctime)s :   %(levelname)s   :  %(module)s  :   %(message)s')

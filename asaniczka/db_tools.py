@@ -22,9 +22,10 @@ import datetime
 import time
 import threading
 import random
-import asaniczka
+import asyncio
 import supabase
 from supabase import Client, create_client
+import asaniczka
 
 
 class SupabaseManager:
@@ -217,6 +218,18 @@ class SupabaseManager:
         if not return_minimal:
             return data
         return None
+
+    async def async_insert_row_to_db(self, data_dict: dict,
+                                     table_name: str,
+                                     return_minimal: Optional[bool] = True,
+                                     suppress_errors: Optional[bool] = True,
+                                     suppress_logs=False) -> None | supabase.PostgrestAPIResponse:
+        return await asyncio.to_thread(self.insert_row_to_db,
+                                       data_dict,
+                                       table_name,
+                                       return_minimal=return_minimal,
+                                       suppress_errors=suppress_errors,
+                                       suppress_logs=suppress_logs)
 
 
 def check_psql_installation(logger: Optional[Union[None, logging.Logger]] = None) -> None:
