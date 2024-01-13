@@ -420,7 +420,8 @@ def get_request(
         logger: Optional[Union[None, logging.Logger]] = None,
         logger_level_debug: Optional[bool] = False,
         proxy: Union[str, None] = None,
-        session: requests.Session = None) -> str | None:
+        session: requests.Session = None,
+        retry_sleep_time: int = 5) -> str | None:
     """
     Makes a basic HTTP GET request to the given URL.
 
@@ -492,7 +493,7 @@ def get_request(
                 or response.status_code == 429 \
                 or response.status_code >= 500:
             # sleep 1 second and incrase retries
-            time.sleep(5)
+            time.sleep(retry_sleep_time)
             retries += 1
             continue
 
