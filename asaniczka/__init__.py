@@ -25,6 +25,7 @@ import random
 import datetime
 import re
 import json
+import asyncio
 
 import pytz
 import requests
@@ -489,6 +490,26 @@ def get_request(
                                 Response text: {format_error(response.text)}')
 
     return content
+
+
+async def async_get_request(
+        url: str,
+        silence_exceptions: bool = False,
+        logger: Optional[Union[None, logging.Logger]] = None,
+        logger_level_debug: Optional[bool] = False,
+        proxy: Union[str, None] = None) -> str | None:
+    """
+    Async version of regular get_request. 
+
+    Await with asyncio
+    """
+
+    return await asyncio.to_thread(get_request,
+                                   url,
+                                   silence_exceptions=silence_exceptions,
+                                   logger=logger,
+                                   logger_level_debug=logger_level_debug,
+                                   proxy=proxy)
 
 
 def post_request(
