@@ -224,6 +224,9 @@ class SupabaseManager:
                                      return_minimal: Optional[bool] = True,
                                      suppress_errors: Optional[bool] = True,
                                      suppress_logs=False) -> None | supabase.PostgrestAPIResponse:
+        """Async version of insert_row_to_db. 
+        YOu don't have to wait for a response if you don't want to"""
+
         return await asyncio.to_thread(self.insert_row_to_db,
                                        data_dict,
                                        table_name,
