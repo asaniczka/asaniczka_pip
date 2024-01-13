@@ -10,7 +10,6 @@ Asaniczka module provides quick functions to get up and running with a scraper.
 5. create_dir()
 
 ## Available Classes:
-
 1. ProjectSetup
 2. Timer
 
@@ -404,12 +403,24 @@ def format_error(error: str) -> str:
     return formatted_error
 
 
+def helper_get_request_no_proxy(url: str, headers: dict, timeout: int, session: requests.Session = None) -> str | None:
+    """Helper function for asaniczka module. Only for internal use"""
+
+    if session:
+        response = session.get(url, headers=headers, timeout=45)
+    else:
+        response = requests.get(url, headers=headers, timeout=45)
+
+    return response
+
+
 def get_request(
         url: str,
         silence_exceptions: bool = False,
         logger: Optional[Union[None, logging.Logger]] = None,
         logger_level_debug: Optional[bool] = False,
-        proxy: Union[str, None] = None) -> str | None:
+        proxy: Union[str, None] = None,
+        session: requests.Session = None) -> str | None:
     """
     Makes a basic HTTP GET request to the given URL.
 
@@ -418,7 +429,8 @@ def get_request(
         `silence_exceptions`: Will not raise any exceptions. Use logger_level_debug to supress errors in the console
         `logger: The logger instance to log warnings. 
         `logger_level_debug`: Whether to log warnings at debug level. 
-        `proxy`: proxy to use
+        `proxy`: proxy to use.
+        `sessions`: a requests session if you decide to use one
 
     Returns:
         str: The content of the response if the request was successful.
@@ -443,7 +455,8 @@ def get_request(
                         'https': proxy
                     })
             else:
-                response = requests.get(url, headers=headers, timeout=45)
+                response = helper_get_request_no_proxy(
+                    url, headers=headers, timeout=45, session=session)
         # pylint: disable=broad-except
         except Exception as error:
             if logger_level_debug:
@@ -526,7 +539,6 @@ async def async_get_request(
     """
     content = None
     retries = 0
-    awaitable_session = None
 
     while retries < 5:
         headers = {
