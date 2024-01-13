@@ -26,6 +26,7 @@ import datetime
 import re
 import json
 import asyncio
+import aiohttp
 
 import pytz
 import requests
@@ -498,20 +499,21 @@ def get_request(
 
 
 async def async_get_request(
-        url: str,
-        silence_exceptions: bool = False,
-        logger: Optional[Union[None, logging.Logger]] = None,
-        logger_level_debug: Optional[bool] = False,
-        proxy: Union[str, None] = None) -> str | None:
+    url: str,
+    silence_exceptions: bool = False,
+    logger: Optional[Union[None, logging.Logger]] = None,
+    logger_level_debug: Optional[bool] = False,
+    proxy: Union[str, None] = None,
+) -> str | None:
     """
-    Makes a ASYNC HTTP GET request to the given URL.
+    Makes an async HTTP GET request to the given URL.
 
     Args:
         `url`: The URL to make the request to.
-        `silence_exceptions`: Will not raise any exceptions. Use logger_level_debug to supress errors in the console
-        `logger: The logger instance to log warnings. 
-        `logger_level_debug`: Whether to log warnings at debug level. 
-        `proxy`: proxy to use
+        `silence_exceptions`: Will not raise any exceptions. Use logger_level_debug to suppress errors in the console.
+        `logger`: The logger instance to log warnings.
+        `logger_level_debug`: Whether to log warnings at debug level.
+        `proxy`: Proxy to use.
 
     Returns:
         str: The content of the response if the request was successful.
@@ -520,73 +522,68 @@ async def async_get_request(
         RuntimeError: If the request failed after 5 retries.
 
     Example Usage:
-        `response_content = asaniczka.get_request("https://example.com", logger)`
+        `response_content = await async_get_request("https://example.com", logger)`
     """
     content = None
     retries = 0
+    awaitable_session = None
+
     while retries < 5:
         headers = {
             'User-Agent': 'Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:109.0) Gecko/20100101 Firefox/119.0'
         }
         try:
-            if proxy:
-                response = requests.get(
-                    url, headers=headers, timeout=45, proxies={
-                        'http': proxy,
-                        'https': proxy
-                    })
-            else:
-                response = requests.get(url, headers=headers, timeout=45)
-        # pylint: disable=broad-except
-        except Exception as error:
+            async with aiohttp.ClientSession() as session:
+                if proxy:
+                    async with session.get(url, headers=headers, timeout=45, proxy=proxy) as response:
+                        content = await response.text()
+                else:
+                    async with session.get(url, headers=headers, timeout=45) as response:
+                        content = await response.text()
+        except aiohttp.ClientError as error:
             if logger_level_debug:
-                logger.debug(
-                    'Failed to get request. %s', format_error(error))
+                logger.debug('Failed to get request. %s', error)
             else:
-                logger.warning(
-                    'Failed to get request. %s', format_error(error))
+                logger.warning('Failed to get request. %s', error)
 
             retries += 1
             continue
 
-        if response.status_code == 200:
-            # do the okay things
-            content = response.text
+        if response.status == 200:
+            # Do the okay things
+            content = response.text()
             break
 
-        # if not okay, then start logging and retrying
         if logger:
-            # if logger level is said to be debug, do debug, otherwise it's a warning
+            # If logger level is set to debug, log at debug level, otherwise it's a warning
             if logger_level_debug:
                 logger.debug(
-                    'Failed to get request. \
-                    Status code %d, Response text: %s',
-                    response.status_code, format_error(response.text))
+                    'Failed to get request. Status code %d, Response text: %s',
+                    response.status, format_error(await response.text())
+                )
             else:
                 logger.warning(
-                    'Failed to get request. \
-                    Status code %d, Response text: %s',
-                    response.status_code, format_error(response.text))
+                    'Failed to get request. Status code %d, Response text: %s',
+                    response.status, format_error(await response.text())
+                )
 
-        if response.status_code == 420 \
-                or response.status_code == 429 \
-                or response.status_code >= 500:
-            # sleep 1 second and incrase retries
+        if response.status == 420 or response.status == 429 or response.status >= 500:
             await asyncio.sleep(5)
             retries += 1
             continue
 
         if not silence_exceptions:
-            raise RuntimeError(f'Response code is neither 200 nor error. \
-                                Last status code {response.status_code}, \
-                                Response text: {format_error(response.text)}')
+            raise RuntimeError(
+                f'Response code is neither 200 nor error. Last status code {response.status}, \
+                 Response text: {format_error(await response.text())}'
+            )
 
-    # raise an error if we tried more than 5 and still failed
     if retries >= 5:
         if not silence_exceptions:
-            raise RuntimeError(f'No response from website. \
-                                Last status code {response.status_code}, \
-                                Response text: {format_error(response.text)}')
+            raise RuntimeError(
+                f'No response from website. Last status code {response.status}, \
+                Response text: {format_error(await response.text())}'
+            )
 
     return content
 
