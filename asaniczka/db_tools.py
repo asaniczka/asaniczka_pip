@@ -442,7 +442,7 @@ def run_db_command_psql(command: str,
         raise RuntimeError(
             f'Subprocess returned non-zero exist: {asaniczka.format_error(completed_process.stderr)}')
 
-    print(completed_process.stdout)
+    return completed_process.stdout
 
 
 def backup_db_psql(sb_manager=None,
