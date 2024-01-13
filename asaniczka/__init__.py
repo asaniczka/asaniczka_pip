@@ -306,12 +306,11 @@ def setup_logger(log_file_path: str,
         "critical": 50
     }
 
+    if disable_root_logger:
+        logging.getLogger().setLevel(logging.CRITICAL)
+
     logger = logging.getLogger('asaniczka')
     logger.setLevel(logging.DEBUG)  # set the logging level to debug
-
-    if disable_root_logger:
-        root_logger = logging.getLogger(__name__)
-        root_logger.setLevel(logging.CRITICAL)
 
     log_format = logging.Formatter(
         '%(asctime)s :   %(levelname)s   :  %(module)s  :   %(message)s')
