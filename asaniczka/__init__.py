@@ -407,9 +407,9 @@ def helper_get_request_no_proxy(url: str, headers: dict, timeout: int, session: 
     """Helper function for asaniczka module. Only for internal use"""
 
     if session:
-        response = session.get(url, headers=headers, timeout=45)
+        response = session.get(url, headers=headers, timeout=timeout)
     else:
-        response = requests.get(url, headers=headers, timeout=45)
+        response = requests.get(url, headers=headers, timeout=timeout)
 
     return response
 
