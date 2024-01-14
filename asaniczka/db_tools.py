@@ -45,6 +45,7 @@ class SupabaseManager:
         self.sb_studio_url = None
         self.sb_anon_key = sb_anon_key
         self.db_backup_loop = False
+        self.is_db_backup_running = False
         self.sb_client: Client = self.create_supabse_client()
 
     def check_supabase_cli_installation(self) -> None:
@@ -172,7 +173,13 @@ class SupabaseManager:
         if not no_log:
             self.project.logger.info('Stopping any supabase instance')
 
-        self.db_backup_loop = False  # stop backup if running
+        self.db_backup_loop = False  # stop backup loop if active
+
+        # if the db is already running a backup, wait for it to finish
+        while self.is_db_backup_running:
+            self.logger.info("Waiting for DB to finish it's current backup.")
+            time.sleep(30)
+
         if backup:
             backup_db_psql(self)
         try:
@@ -489,6 +496,7 @@ def backup_db_psql(sb_manager=None,
     if sb_manager:
         logger = sb_manager.logger
         db_url = sb_manager.sb_db_url
+        sb_manager.is_db_backup_running = True
 
     if not db_url:
         if logger:
@@ -525,6 +533,9 @@ def backup_db_psql(sb_manager=None,
 
     if logger:
         logger.info('Back up completed!')
+
+    if sb_manager:
+        sb_manager.is_db_backup_running = False
 
 
 def run_backup_every_hour(sb_manager) -> None:
