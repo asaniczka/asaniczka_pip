@@ -34,14 +34,14 @@ class SupabaseManager:
     project is asaniczka.ProjectSetup
     """
 
-    def __init__(self, project, sb_api_url: str = None, sb_anon_key: str = None) -> None:
+    def __init__(self, project, sb_api_url: str = None, sb_anon_key: str = None, sb_db_url: str = None) -> None:
         if not project:
             raise AttributeError('Please send asaniczka.ProjectSetup')
 
         self.project = project
         self.logger = self.project.logger
         self.sb_api_url = sb_api_url
-        self.sb_db_url = None
+        self.sb_db_url = sb_db_url
         self.sb_studio_url = None
         self.sb_anon_key = sb_anon_key
         self.db_backup_loop = False
@@ -459,7 +459,8 @@ def run_db_command_psql(command: str,
 
     if not db_url:
         if logger:
-            logger.critical("You didn't send a db_url. By create_sb_table()")
+            logger.critical(
+                "You didn't send a db_url. By run_db_command_psql()")
         raise AttributeError("You didn't send a db_url")
 
     check_psql_installation(logger)
