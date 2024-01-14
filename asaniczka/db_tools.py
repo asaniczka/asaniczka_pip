@@ -150,7 +150,7 @@ class SupabaseManager:
                 'API URL': self.sb_api_url,
                 'DB URL': self.sb_db_url,
                 'Studio URL': self.sb_studio_url,
-                'anon key': self.sb_studio_url
+                'anon key': self.sb_anon_key
             }
 
             for key, value in items_to_log.items():
