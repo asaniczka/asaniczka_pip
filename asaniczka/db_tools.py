@@ -34,18 +34,18 @@ class SupabaseManager:
     project is asaniczka.ProjectSetup
     """
 
-    def __init__(self, project) -> None:
+    def __init__(self, project, sb_api_url: str = None, sb_anon_key: str = None) -> None:
         if not project:
             raise AttributeError('Please send asaniczka.ProjectSetup')
 
         self.project = project
         self.logger = self.project.logger
-        self.sb_api_url = None
+        self.sb_api_url = sb_api_url
         self.sb_db_url = None
         self.sb_studio_url = None
-        self.sb_anon_key = None
+        self.sb_anon_key = sb_anon_key
         self.db_backup_loop = False
-        self.sb_client: Client = None
+        self.sb_client: Client = self.create_supabse_client()
 
     def check_supabase_cli_installation(self) -> None:
         """function checks if supabase cli is installed on the system"""
@@ -157,8 +157,7 @@ class SupabaseManager:
                     self.project.logger.info(
                         f"Supabase {key}: {value}")
 
-            self.sb_client = create_client(
-                self.sb_api_url, self.sb_anon_key)
+            self.create_supabse_client()
 
             self.db_backup_loop = True
             background_backup = threading.Thread(
@@ -203,6 +202,19 @@ class SupabaseManager:
                 f"Unable to stop supabase. Error: {asaniczka.format_error(stderr_output)}")
             raise RuntimeError(
                 "Unable to stop Supabase. Are you sure Docker is running?") from error
+
+    def create_supabse_client(self) -> supabase.Client:
+        """Create a supabase client"""
+
+        if not self.sb_anon_key or not self.sb_api_url:
+            self.logger.warning(
+                'Supabase client not created since no url or anon key')
+            return
+
+        self.sb_client = create_client(
+            self.sb_api_url, self.sb_anon_key)
+
+        self.logger.info("Supabase client created successfully")
 
     def insert_row_to_db(self,
                          data_dict: dict,
