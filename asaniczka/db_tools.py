@@ -168,7 +168,11 @@ class SupabaseManager:
         self.logger.info('Supabase started sucessfully!')
 
     def stop_supabase_instance(self, no_log=False, debug=False, backup=True) -> None:
-        """Use this to stop any running supabase instances"""
+        """Use this to stop any running supabase instances
+
+        Run with backup=False to stop without knowing any SB endpoints
+
+        """
 
         if not no_log:
             self.project.logger.info('Stopping any supabase instance')
