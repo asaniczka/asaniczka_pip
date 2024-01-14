@@ -494,6 +494,8 @@ def backup_db_psql(sb_manager=None,
         if logger:
             logger.critical("You didn't send a db_url. By backup_sb_db()")
         raise AttributeError("You didn't send a db_url")
+    if logger:
+        logger.info('Backing up Database!')
 
     check_psql_installation(logger)
 
