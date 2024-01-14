@@ -481,13 +481,13 @@ def get_request(
             if logger_level_debug:
                 logger.debug(
                     'Failed to get request. \
-                    Status code %d, Response text: %s',
-                    response.status_code, format_error(response.text))
+                    Status code %d, URL: %s, Response text: %s',
+                    response.status_code, url, format_error(response.text))
             else:
                 logger.warning(
                     'Failed to get request. \
-                    Status code %d, Response text: %s',
-                    response.status_code, format_error(response.text))
+                    Status code %d, URL: %s, Response text: %s',
+                    response.status_code, url, format_error(response.text))
 
         if response.status_code == 420 \
                 or response.status_code == 429 \
