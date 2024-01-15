@@ -692,6 +692,7 @@ def post_request(
             raise RuntimeError(f'Response code is neither 200 nor error. \
                                 Last status code {response.status_code}, \
                                 Response text: {format_error(response.text)}')
+        break
 
     # raise an error if we tried more than 5 and still failed
     if retries >= 5:
