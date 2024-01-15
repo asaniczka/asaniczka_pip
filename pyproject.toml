@@ -9,11 +9,11 @@ description = "All my commonly used fuctions"
 readme = "README.md"
 dependencies = [
     "pytz>=2022.1",
-    "requests>=2.31",
-    "playwright>=1.40.0",
-    "tqdm>=4.66.1",
-    "supabase>=1.0.4",
-    "httpx>=0.26.0"
+    "requests>=2.0",
+    "playwright>=1.0.0",
+    "tqdm>=4.0.0",
+    "supabase>=1.0.0",
+    "httpx>=0.20.0"
 ]
 requires-python = ">= 3.10"
 authors = [
