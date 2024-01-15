@@ -748,12 +748,9 @@ async def async_post_request(
             }
         try:
             if proxy:
-                async with httpx.AsyncClient() as client:
+                async with httpx.AsyncClient(proxies=proxy) as client:
                     response = await client.post(
-                        url, headers=headers, data=payload, timeout=timeout, proxies={
-                            'http': proxy,
-                            'https': proxy
-                        })
+                        url, headers=headers, data=payload, timeout=timeout)
             else:
                 async with httpx.AsyncClient() as client:
                     response = await client.post(
