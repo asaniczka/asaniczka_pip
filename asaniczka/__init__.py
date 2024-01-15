@@ -501,6 +501,7 @@ def get_request(
             raise RuntimeError(f'Response code is neither 200 nor error. \
                                 Last status code {response.status_code}, \
                                 Response text: {format_error(response.text)}')
+        break
 
     # raise an error if we tried more than 5 and still failed
     if retries >= 5:
@@ -590,6 +591,7 @@ async def async_get_request(
                 f'Response code is neither 200 nor error. Last status code {response.status}, \
                  Response text: {format_error(await response.text())}'
             )
+        break
 
     if retries >= 5:
         if not silence_exceptions:
