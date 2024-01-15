@@ -610,7 +610,8 @@ def post_request(
         silence_exceptions: bool = False,
         logger: Optional[Union[None, logging.Logger]] = None,
         logger_level_debug: Optional[bool] = False,
-        proxy: Union[str, None] = None) -> str | None:
+        proxy: Union[str, None] = None,
+        retry_sleep_time: int = 5) -> str | None:
     """
     Makes a basic HTTP POST request to the given URL.
 
@@ -684,7 +685,7 @@ def post_request(
                 or response.status_code == 429 \
                 or response.status_code >= 500:
             # sleep 5 second and incrase retries
-            time.sleep(5)
+            time.sleep(retry_sleep_time)
             retries += 1
             continue
 
