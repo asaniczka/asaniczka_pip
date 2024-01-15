@@ -25,7 +25,7 @@ import datetime
 import re
 import json
 import asyncio
-import aiohttp
+import httpx
 
 import pytz
 import requests
@@ -403,7 +403,10 @@ def format_error(error: str) -> str:
     return formatted_error
 
 
-def helper_get_request_no_proxy(url: str, headers: dict, timeout: int, session: requests.Session = None) -> str | None:
+def helper_get_request_no_proxy(url: str,
+                                headers: dict,
+                                timeout: int,
+                                session: requests.Session = None) -> str | None:
     """Helper function for asaniczka module. Only for internal use"""
 
     if session:
@@ -514,12 +517,13 @@ def get_request(
 
 
 async def async_get_request(
-    url: str,
-    silence_exceptions: bool = False,
-    logger: Optional[Union[None, logging.Logger]] = None,
-    logger_level_debug: Optional[bool] = False,
-    proxy: Union[str, None] = None,
-) -> str | None:
+        url: str,
+        silence_exceptions: bool = False,
+        logger: Optional[Union[None, logging.Logger]] = None,
+        logger_level_debug: Optional[bool] = False,
+        proxy: Union[str, None] = None,
+        timeout: int = 45,
+        retry_sleep_time: int = 5) -> str | None:
     """
     Makes an async HTTP GET request to the given URL.
 
@@ -547,14 +551,12 @@ async def async_get_request(
             'User-Agent': 'Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:109.0) Gecko/20100101 Firefox/119.0'
         }
         try:
-            async with aiohttp.ClientSession() as session:
+            async with httpx.AsyncClient() as client:
                 if proxy:
-                    async with session.get(url, headers=headers, timeout=45, proxy=proxy) as response:
-                        content = await response.text()
+                    response = await client.get(url, headers=headers, timeout=timeout, proxy=proxy)
                 else:
-                    async with session.get(url, headers=headers, timeout=45) as response:
-                        content = await response.text()
-        except aiohttp.ClientError as error:
+                    response = await client.get(url, headers=headers, timeout=timeout)
+        except Exception as error:
             if logger_level_debug:
                 logger.debug('Failed to get request. %s', error)
             else:
@@ -582,7 +584,7 @@ async def async_get_request(
                 )
 
         if response.status == 420 or response.status == 429 or response.status >= 500:
-            await asyncio.sleep(5)
+            await asyncio.sleep(retry_sleep_time)
             retries += 1
             continue
 
@@ -611,7 +613,8 @@ def post_request(
         logger: Optional[Union[None, logging.Logger]] = None,
         logger_level_debug: Optional[bool] = False,
         proxy: Union[str, None] = None,
-        retry_sleep_time: int = 5) -> str | None:
+        retry_sleep_time: int = 5,
+        timeout: int = 45) -> str | None:
     """
     Makes a basic HTTP POST request to the given URL.
 
@@ -643,13 +646,13 @@ def post_request(
         try:
             if proxy:
                 response = requests.post(
-                    url, headers=headers, data=payload, timeout=45, proxies={
+                    url, headers=headers, data=payload, timeout=timeout, proxies={
                         'http': proxy,
                         'https': proxy
                     })
             else:
                 response = requests.post(
-                    url, headers=headers, data=payload, timeout=45)
+                    url, headers=headers, data=payload, timeout=timeout)
         # pylint: disable=broad-except
         except Exception as error:
             if logger_level_debug:
@@ -686,6 +689,111 @@ def post_request(
                 or response.status_code >= 500:
             # sleep 5 second and incrase retries
             time.sleep(retry_sleep_time)
+            retries += 1
+            continue
+
+        if not silence_exceptions:
+            raise RuntimeError(f'Response code is neither 200 nor error. \
+                                Last status code {response.status_code}, \
+                                Response text: {format_error(response.text)}')
+        break
+
+    # raise an error if we tried more than 5 and still failed
+    if retries >= 5:
+        if not silence_exceptions:
+            raise RuntimeError(f'No response from website. \
+                                Last status code {response.status_code}, \
+                                Response text: {format_error(response.text)}')
+
+    return content
+
+
+async def async_post_request(
+        url: str,
+        headers: dict = None,
+        payload: str = None,
+        silence_exceptions: bool = False,
+        logger: Optional[Union[None, logging.Logger]] = None,
+        logger_level_debug: Optional[bool] = False,
+        proxy: Union[str, None] = None,
+        retry_sleep_time: int = 5,
+        timeout: int = 45) -> str | None:
+    """
+    Makes a basic HTTP POST request to the given URL.
+
+    Args:
+        `url`: The URL to make the request to.
+        `headers`: The headers for the request.
+        `payload`: The payload for the request.
+        `silence_exceptions`: Will not raise any exceptions. Use logger_level_debug to suppress errors in the console.
+        `logger`: The logger instance to log warnings.
+        `logger_level_debug`: Whether to log warnings at debug level.
+        `proxy`: Proxy to use.
+
+    Returns:
+        str: The content of the response if the request was successful. Returns None if the request failed.
+
+    Raises:
+        RuntimeError: If the request failed after 5 retries.
+
+    Example Usage:
+        `response_content = asaniczka.post_request("https://example.com", headers, payload, logger)`
+    """
+    content = None
+    retries = 0
+    while retries < 5:
+        if not headers:
+            headers = {
+                'User-Agent': 'Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:109.0) Gecko/20100101 Firefox/119.0'
+            }
+        try:
+            if proxy:
+                async with httpx.AsyncClient() as client:
+                    response = await client.post(
+                        url, headers=headers, data=payload, timeout=timeout, proxies={
+                            'http': proxy,
+                            'https': proxy
+                        })
+            else:
+                async with httpx.AsyncClient() as client:
+                    response = await client.post(
+                        url, headers=headers, data=payload, timeout=timeout)
+        # pylint: disable=broad-except
+        except Exception as error:
+            if logger_level_debug:
+                logger.debug(
+                    'Failed to POST request. %s', format_error(error))
+            else:
+                logger.warning(
+                    'Failed to POST request. %s', format_error(error))
+
+            retries += 1
+            continue
+
+        if response.status_code == 200:
+            # do the okay things
+            content = response.text
+            break
+
+        # if not okay, then start logging and retrying
+        if logger:
+            # if logger level is said to be debug, do debug, otherwise it's a warning
+            if logger_level_debug:
+                logger.debug(
+                    'Failed to get request. \
+                    Status code %d, Response text: %s',
+                    response.status_code, format_error(response.text))
+            else:
+                logger.warning(
+                    'Failed to get request. \
+                    Status code %d, Response text: %s',
+                    response.status_code, format_error(response.text))
+
+        if response.status_code == 420 \
+                or response.status_code == 429 \
+                or response.status_code >= 500:
+            # sleep 5 second and incrase retries
+            asyncio.sleep(retry_sleep_time)
             retries += 1
             continue
 
