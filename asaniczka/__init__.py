@@ -424,7 +424,8 @@ def get_request(
         logger_level_debug: Optional[bool] = False,
         proxy: Union[str, None] = None,
         session: requests.Session = None,
-        retry_sleep_time: int = 5) -> str | None:
+        retry_sleep_time: int = 5,
+        timeout: int = 45) -> str | None:
     """
     Makes a basic HTTP GET request to the given URL.
 
@@ -454,13 +455,13 @@ def get_request(
         try:
             if proxy:
                 response = requests.get(
-                    url, headers=headers, timeout=45, proxies={
+                    url, headers=headers, timeout=timeout, proxies={
                         'http': proxy,
                         'https': proxy
                     })
             else:
                 response = helper_get_request_no_proxy(
-                    url, headers=headers, timeout=45, session=session)
+                    url, headers=headers, timeout=timeout, session=session)
         # pylint: disable=broad-except
         except Exception as error:
             if logger_level_debug:
@@ -551,9 +552,9 @@ async def async_get_request(
             'User-Agent': 'Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:109.0) Gecko/20100101 Firefox/119.0'
         }
         try:
-            async with httpx.AsyncClient() as client:
+            async with httpx.AsyncClient(proxies=proxy) as client:
                 if proxy:
-                    response = await client.get(url, headers=headers, timeout=timeout, proxy=proxy)
+                    response = await client.get(url, headers=headers, timeout=timeout)
                 else:
                     response = await client.get(url, headers=headers, timeout=timeout)
         except Exception as error:
