@@ -307,7 +307,8 @@ def setup_logger(log_file_path: str,
     }
 
     if disable_root_logger:
-        logging.getLogger().setLevel(logging.CRITICAL)
+        from logging import basicConfig, CRITICAL
+        basicConfig(level=CRITICAL)
 
     logger = logging.getLogger('asaniczka')
     logger.setLevel(logging.DEBUG)  # set the logging level to debug
