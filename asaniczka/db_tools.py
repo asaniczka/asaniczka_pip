@@ -225,7 +225,10 @@ class SupabaseManager:
         self.sb_client = create_client(
             self.sb_api_url, self.sb_anon_key)
 
-        self.logger.info("Supabase client created successfully")
+        if self.sb_client:
+            self.logger.info("Supabase client created successfully")
+        else:
+            self.logger.info("Supabase client wasn't created for some reason.")
 
     def insert_row_to_db(self,
                          data_dict: dict,
