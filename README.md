@@ -2,6 +2,8 @@
 
 The Asaniczka module provides quick functions to get up and running with a scraper.
 
+> This documentation is outdated. It will be updated in the next major update
+
 ## Available Functions:
 
 1. `setup_logger()`: Set up a logger and return the logger instance.
