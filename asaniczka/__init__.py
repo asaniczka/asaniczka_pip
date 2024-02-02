@@ -29,7 +29,6 @@ import httpx
 
 import pytz
 import requests
-from playwright.sync_api import sync_playwright
 
 # pylint: disable=logging-fstring-interpolation
 
