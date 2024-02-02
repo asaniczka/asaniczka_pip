@@ -273,11 +273,12 @@ class Timer:
 # # # FUNCTIONS # # #
 
 
-def sanitize_filename(name: str) -> str:
+def sanitize_filename(name: str, uniqify: bool = False) -> str:
     """Remove symbols from a filename and return a sanitized version.
 
     Args:
         `name`: The filename to sanitize.
+        `uniqify`: add a random int at the end
 
     Returns:
         str: The sanitized filename.
@@ -286,6 +287,11 @@ def sanitize_filename(name: str) -> str:
     sanitized_name = name.replace(" ", "_")
     sanitized_name = re.sub(r"[^a-zA-Z\d_]", "", sanitized_name)
     sanitized_name = sanitized_name[:100]
+
+    if uniqify:
+        sanitized_name = (
+            sanitized_name + "_" + str(random.randint(10000, 99999999999999))
+        )
 
     return sanitized_name
 
