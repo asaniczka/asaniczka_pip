@@ -25,7 +25,7 @@ import random
 import asyncio
 import supabase
 from supabase import Client, create_client
-import asaniczka.main as main
+import asaniczka
 
 
 class SupabaseManager:
@@ -151,7 +151,7 @@ class SupabaseManager:
             except subprocess.CalledProcessError as error:
                 error_message = error.stderr
                 self.project.logger.critical(
-                    f"Error when starting db: {main.format_error(error_message)}"
+                    f"Error when starting db: {asaniczka.format_error(error_message)}"
                 )
                 raise RuntimeError("Error when starting db") from error
         else:
@@ -249,7 +249,7 @@ class SupabaseManager:
         except subprocess.CalledProcessError as error:
             stderr_output = error.stderr.decode("utf-8")
             self.project.logger.critical(
-                f"Unable to stop supabase. Error: {main.format_error(stderr_output)}"
+                f"Unable to stop supabase. Error: {asaniczka.format_error(stderr_output)}"
             )
             raise RuntimeError(
                 "Unable to stop Supabase. Are you sure Docker is running?"
@@ -288,11 +288,11 @@ class SupabaseManager:
         except Exception as error:
             if not suppress_logs:
                 self.logger.error(
-                    f"Error when inserting to {table_name}:    {main.format_error(error)}"
+                    f"Error when inserting to {table_name}:    {asaniczka.format_error(error)}"
                 )
             if not suppress_errors:
                 raise RuntimeError(
-                    f"Error when inserting to db: {main.format_error(error)}"
+                    f"Error when inserting to db: {asaniczka.format_error(error)}"
                 ) from error
 
         if not return_minimal:
@@ -346,7 +346,7 @@ def check_psql_installation(
         stderr = error.stderr
         if logger:
             logger.critical(
-                f"Can't find psql. Do you have it installed? {main.format_error(stderr)}"
+                f"Can't find psql. Do you have it installed? {asaniczka.format_error(stderr)}"
             )
         raise RuntimeError(
             "Can't find psql. Do you have it installed? \nRun `sudo apt install postgresql-client-15`"
@@ -423,11 +423,11 @@ def get_table_names_psql(
     if completed_process.returncode != 0:
         if logger:
             logger.error(
-                f"Subprocess returned non-zero exist: {main.format_error(completed_process.stderr)}"
+                f"Subprocess returned non-zero exist: {asaniczka.format_error(completed_process.stderr)}"
             )
 
         raise RuntimeError(
-            f"Subprocess returned non-zero exist: {main.format_error(completed_process.stderr)}"
+            f"Subprocess returned non-zero exist: {asaniczka.format_error(completed_process.stderr)}"
         )
 
     if make_list:
@@ -481,11 +481,11 @@ def get_column_details_psql(
     if completed_process.returncode != 0:
         if logger:
             logger.error(
-                f"Subprocess returned non-zero exist: {main.format_error(completed_process.stderr)}"
+                f"Subprocess returned non-zero exist: {asaniczka.format_error(completed_process.stderr)}"
             )
 
         raise RuntimeError(
-            f"Subprocess returned non-zero exist: {main.format_error(completed_process.stderr)}"
+            f"Subprocess returned non-zero exist: {asaniczka.format_error(completed_process.stderr)}"
         )
 
     return_bundle = completed_process.stdout
@@ -534,11 +534,11 @@ def run_db_command_psql(
     if completed_process.returncode != 0:
         if logger:
             logger.error(
-                f"Subprocess returned non-zero exist: {main.format_error(completed_process.stderr)}"
+                f"Subprocess returned non-zero exist: {asaniczka.format_error(completed_process.stderr)}"
             )
 
         raise RuntimeError(
-            f"Subprocess returned non-zero exist: {main.format_error(completed_process.stderr)}"
+            f"Subprocess returned non-zero exist: {asaniczka.format_error(completed_process.stderr)}"
         )
 
     return completed_process.stdout
@@ -600,11 +600,11 @@ def backup_db_psql(
     if completed_process.returncode != 0:
         if logger:
             logger.error(
-                f"Error when backing up database: {main.format_error(completed_process.stdout)}"
+                f"Error when backing up database: {asaniczka.format_error(completed_process.stdout)}"
             )
         else:
             print(
-                f"Error when backing up database: {main.format_error(completed_process.stdout)}"
+                f"Error when backing up database: {asaniczka.format_error(completed_process.stdout)}"
             )
 
     if logger:

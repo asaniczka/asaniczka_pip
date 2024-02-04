@@ -20,7 +20,7 @@ import requests
 from tqdm.auto import tqdm
 from playwright.sync_api import sync_playwright
 import pydantic
-import asaniczka.main as main
+import asaniczka
 
 # ------------------------------------------------------------
 #                           CLASSES
@@ -142,7 +142,7 @@ def check_ratelimit(
     """
     count_lock = Lock()
     burst_data = {"total_requests": 0, "requests_till_429": 0, "time_till_429": 0}
-    timer = main.Timer()
+    timer = asaniczka.Timer()
 
     if check:
         status_code = send_request(
@@ -305,7 +305,7 @@ def steal_cookies(
 
     except Exception as error:
         raise RuntimeError(
-            f"Error when stealing cookies. Please inform developer (asaniczka@gmail.com) of this error as this error is not handled. \n{main.format_error(error)}"
+            f"Error when stealing cookies. Please inform developer (asaniczka@gmail.com) of this error as this error is not handled. \n{asaniczka.format_error(error)}"
         ) from error
 
 
