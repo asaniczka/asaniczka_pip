@@ -25,7 +25,7 @@ import random
 import asyncio
 import supabase
 from supabase import Client, create_client
-import asaniczka
+import main as asaniczka
 
 
 class SupabaseManager:

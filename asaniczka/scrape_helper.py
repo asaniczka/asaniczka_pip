@@ -20,7 +20,7 @@ import requests
 from tqdm.auto import tqdm
 from playwright.sync_api import sync_playwright
 import pydantic
-import asaniczka
+import main as asaniczka
 
 # ------------------------------------------------------------
 #                           CLASSES
