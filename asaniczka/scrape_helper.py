@@ -277,7 +277,6 @@ def steal_cookies(
                 page = browser.new_page()
 
             page.goto(url)
-
             cookies = page.context.cookies()
 
         stolen_cookie_dict = {}
