@@ -1,6 +1,6 @@
 """Asaniczka module provides quick functions to get up and running with a scraper."""
 
-from main import (
+from asaniczka.main import (
     ProjectSetup,
     Timer,
     sanitize_filename,
