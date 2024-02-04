@@ -604,7 +604,7 @@ async def async_get_request(
             retries += 1
             continue
 
-        if response.status == 200:
+        if response.status_code == 200:
             # Do the okay things
             content = response.text()
             break
@@ -614,24 +614,28 @@ async def async_get_request(
             if logger_level_debug:
                 logger.debug(
                     "Failed to get request. Status code %d, Response text: %s",
-                    response.status,
+                    response.status_code,
                     format_error(await response.text()),
                 )
             else:
                 logger.warning(
                     "Failed to get request. Status code %d, Response text: %s",
-                    response.status,
+                    response.status_code,
                     format_error(await response.text()),
                 )
 
-        if response.status == 420 or response.status == 429 or response.status >= 500:
+        if (
+            response.status_code == 420
+            or response.status_code == 429
+            or response.status_code >= 500
+        ):
             await asyncio.sleep(retry_sleep_time)
             retries += 1
             continue
 
         if not silence_exceptions:
             raise RuntimeError(
-                f"Response code is neither 200 nor error. Last status code {response.status}, \
+                f"Response code is neither 200 nor error. Last status code {response.status_code}, \
                  Response text: {format_error(await response.text())}"
             )
         break
@@ -639,7 +643,7 @@ async def async_get_request(
     if retries >= 5:
         if not silence_exceptions:
             raise RuntimeError(
-                f"No response from website. Last status code {response.status}, \
+                f"No response from website. Last status code {response.status_code}, \
                 Response text: {format_error(await response.text())}"
             )
 
