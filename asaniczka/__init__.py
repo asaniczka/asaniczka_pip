@@ -582,7 +582,6 @@ async def async_get_request(
     Example Usage:
         `response_content = await async_get_request("https://example.com", logger)`
     """
-    content = None
     retries = 0
 
     while retries < 5:
@@ -606,8 +605,8 @@ async def async_get_request(
 
         if response.status_code == 200:
             # Do the okay things
-            content = response.text()
-            break
+            content = response.text
+            return content
 
         if logger:
             # If logger level is set to debug, log at debug level, otherwise it's a warning
@@ -647,7 +646,7 @@ async def async_get_request(
                 Response text: {format_error(await response.text())}"
             )
 
-    return content
+    return None
 
 
 def post_request(
