@@ -216,23 +216,23 @@ def help_forge_cookies(url: str, project) -> None:
 
         print(f"Found {len(cookies)} cookies")
 
-        stolen_cookie_dict = {}
-        if cookies:
-            for cookie in cookies:
-                stolen_cookie_dict[cookie["name"]] = cookie["value"]
+    stolen_cookie_dict = {}
+    if cookies:
+        for cookie in cookies:
+            stolen_cookie_dict[cookie["name"]] = cookie["value"]
 
-        api_cookie = str(input("Please enter api cookies:\n"))
+    api_cookie = str(input("Please enter api cookies:\n"))
 
-        # replace cookie values with dict key names
-        for key, value in stolen_cookie_dict.items():
-            api_cookie = api_cookie.replace(str(value), f"<<stolen_cookie['{key}']>>")
-            api_cookie = api_cookie.replace("<<", "{").replace(">>", "}")
+    # replace cookie values with dict key names
+    for key, value in stolen_cookie_dict.items():
+        api_cookie = api_cookie.replace(str(value), f"<<stolen_cookie['{key}']>>")
+        api_cookie = api_cookie.replace("<<", "{").replace(">>", "}")
 
-        project.save_temp_file(stolen_cookie_dict, file_name="stolen_cookie_dict")
-        project.save_temp_file(api_cookie, file_name="raw_api_cookie")
+    project.save_temp_file(stolen_cookie_dict, file_name="stolen_cookie_dict")
+    project.save_temp_file(api_cookie, file_name="raw_api_cookie")
 
-        print()
-        print("COOKIES SAVED. Please check temp folder :)")
+    print()
+    print("COOKIES SAVED. Please check temp folder :)")
 
 
 def steal_cookies(
