@@ -19,9 +19,26 @@ import time
 import requests
 from tqdm.auto import tqdm
 from playwright.sync_api import sync_playwright
+import pydantic
 import asaniczka
 
+# ------------------------------------------------------------
+#                           CLASSES
+# ------------------------------------------------------------
 
+
+class Proxy(pydantic.BaseModel):
+    """Pydantic model for proxy dataclass"""
+
+    ip_address: str
+    port: int
+    username: str | None
+    password: str | None
+
+
+# ------------------------------------------------------------
+#                         FUNCTIONS
+# ------------------------------------------------------------
 def send_request(
     url: str,
     timer,
@@ -292,7 +309,7 @@ def steal_cookies(
         ) from error
 
 
-def format_webshare_proxies(proxy: str, return_type_http: bool = False) -> str | dict:
+def format_webshare_proxies(proxy: str, return_type_http: bool = False) -> str | Proxy:
     """Formats webshare proxies to http standard
 
     Args:
@@ -310,12 +327,11 @@ def format_webshare_proxies(proxy: str, return_type_http: bool = False) -> str |
     username = split_proxy[2]
     password = split_proxy[3]
 
-    if return_type_http == "http":
-        return f"http://{username}:{password}@{ip_address}:{port}"
+    proxy_data = Proxy(
+        ip_address=ip_address, port=port, username=username, password=password
+    )
 
-    return {
-        "ip_address": ip_address,
-        "port": port,
-        "username": username,
-        "password": password,
-    }
+    if return_type_http == "http":
+        return f"http://{proxy_data.username}:{proxy_data.password}@{proxy_data.ip_address}:{proxy_data.port}"
+
+    return proxy_data

@@ -8,28 +8,25 @@ version = "2.6.5"
 description = "All my commonly used fuctions"
 readme = "README.md"
 dependencies = [
-    "pytz>=2022.1",
-    "requests>=2.0",
-    "playwright>=1.0.0",
-    "tqdm>=4.0.0",
-    "supabase>=1.0.0",
-    "httpx>=0.20.0"
+  "pytz>=2022.1",
+  "requests>=2.0",
+  "playwright>=1.0.0",
+  "tqdm>=4.0.0",
+  "supabase>=1.0.0",
+  "httpx>=0.20.0",
+  "pydantic>=2.6.0",
 ]
 requires-python = ">= 3.10"
-authors = [
-  {name = "Asaniczka", email = "asaniczka@gmail.com"}
+authors = [{ name = "Asaniczka", email = "asaniczka@gmail.com" }]
+maintainers = [{ name = "Asaniczka", email = "asaniczka@gmail.com" }]
+license = { text = "Apache-2.0" }
+classifiers = [
+  "Development Status :: 4 - Beta",
+  "Intended Audience :: Developers",
+  "License :: OSI Approved :: Apache Software License",
+  "Natural Language :: English",
+  "Programming Language :: Python :: 3.10",
 ]
-maintainers = [
-  {name = "Asaniczka", email = "asaniczka@gmail.com"}
-]
-license = {text = "Apache-2.0"}
-classifiers=[
-        "Development Status :: 4 - Beta",
-        "Intended Audience :: Developers",
-        "License :: OSI Approved :: Apache Software License",
-        "Natural Language :: English",
-        "Programming Language :: Python :: 3.10"
-    ]
 
 [project.urls]
-Homepage="https://github.com/asaniczka/asaniczka_pip"
+Homepage = "https://github.com/asaniczka/asaniczka_pip"
