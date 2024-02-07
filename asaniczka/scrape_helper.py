@@ -15,6 +15,7 @@ from threading import Lock
 import concurrent.futures
 from typing import Optional, Union
 import time
+from enum import Enum
 
 import requests
 from tqdm.auto import tqdm
@@ -27,13 +28,59 @@ import asaniczka.main as asaniczka
 # ------------------------------------------------------------
 
 
-class Proxy(pydantic.BaseModel):
-    """Pydantic model for proxy dataclass"""
+class ProxyProvider(Enum):
+    """Class for different proxy providers"""
 
-    ip_address: str
-    port: int
-    username: str | None
-    password: str | None
+    WEBSHARE = "webshare"
+
+
+class Proxy:
+    """
+    General class to store and format proxies
+
+    Args:
+        `str_proxy`: proxy data as a string
+        `provider`: Provider of the proxy. Use ProxyProvider Enum
+
+    Functions:
+        `to_playwright`: Return a playwright proxy compatible dict
+        `to_basic_auth`: Return a HTTP Basic Auth standard Proxy
+
+    """
+
+    def __init__(self, str_proxy: str, provider: ProxyProvider) -> None:
+
+        self.raw_string = str_proxy
+        self.ip_address: str = None
+        self.port: int = None
+        self.username: str = None
+        self.password: str = None
+
+        if provider.value == ProxyProvider.WEBSHARE.value:
+            self.parse_webshare()
+
+    def parse_webshare(self) -> None:
+        """parse webshare proxy format"""
+
+        split_proxy = self.raw_string.split(":")
+        self.ip_address = split_proxy[0]
+        self.port = split_proxy[1]
+        self.username = split_proxy[2]
+        self.password = split_proxy[3]
+
+    def to_playwright(self) -> dict:
+        """outputs the proxy to playwright proxy format"""
+
+        return {
+            "server": f"{self.ip_address}:{self.port}",
+            "username": self.username,
+            "password": self.password,
+        }
+
+    def to_basic_auth(self) -> dict:
+        """outputs the proxy to playwright proxy format"""
+
+        return f"{self.username}:{self.password}@{self.ip_address}:{self.port}"
 
 
 # ------------------------------------------------------------
@@ -252,18 +299,13 @@ def help_forge_cookies(url: str, project) -> None:
     print("COOKIES SAVED. Please check temp folder :)")
 
 
-def steal_cookies(
-    url: str,
-    proxy_server: str = None,
-    proxy_user: str = None,
-    proxy_pass: str = None,
-) -> dict:
+def steal_cookies(url: str, proxy: Proxy = None) -> dict:
     """
     Gets cookies from a given domain.
 
     Args:
         `url`: The URL from which to steal cookies.
-        `proxy`: Proxy to use. Format in HTTP Auth standard
+        `proxy`: Proxy Class. Optional
 
     Returns:
         `dict`: A dictionary containing the stolen cookies, where the keys are the cookie names and the values are the cookie values.
@@ -279,14 +321,8 @@ def steal_cookies(
 
     try:
         with sync_playwright() as pw:
-            if proxy_server:
-                browser = pw.chromium.launch(
-                    proxy={
-                        "server": proxy_server,
-                        "username": proxy_user,
-                        "password": proxy_pass,
-                    }
-                )
+            if proxy:
+                browser = pw.chromium.launch(proxy=proxy.to_playwright())
                 page = browser.new_page()
 
             else:
@@ -307,31 +343,3 @@ def steal_cookies(
         raise RuntimeError(
             f"Error when stealing cookies. Please inform developer (asaniczka@gmail.com) of this error as this error is not handled. \n{asaniczka.format_error(error)}"
         ) from error
-
-
-def format_webshare_proxies(proxy: str, return_type_http: bool = False) -> str | Proxy:
-    """Formats webshare proxies to http standard
-
-    Args:
-        `proxy`: proxy given by webshare
-        `return_type_http`: whether to return HTTP auth standard or dict
-
-    Returns:
-        `"http://{username}:{password}@{ip_address}:{port}"`
-    """
-
-    split_proxy = proxy.split(":")
-
-    ip_address = split_proxy[0]
-    port = split_proxy[1]
-    username = split_proxy[2]
-    password = split_proxy[3]
-
-    proxy_data = Proxy(
-        ip_address=ip_address, port=port, username=username, password=password
-    )
-
-    if return_type_http == "http":
-        return f"http://{proxy_data.username}:{proxy_data.password}@{proxy_data.ip_address}:{proxy_data.port}"
-
-    return proxy_data

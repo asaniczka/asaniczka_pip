@@ -73,10 +73,8 @@ class ProjectSetup:
         if not project_name:
             raise ValueError("A project name is required.")
 
-        cwd = os.getcwd()
-
         self.project_name = project_name
-        self.project_folder = self.create_folder(cwd, self.project_name)
+        self.project_folder = self.create_folder(os.getcwd(), self.project_name)
         self.data_folder = self.create_folder(self.project_folder, "data")
         self.temp_folder = self.create_folder(self.project_folder, "temp")
         self.log_folder = self.create_folder(self.project_folder, "logs")
@@ -161,7 +159,7 @@ class ProjectSetup:
     ) -> None:
         """Saves the given content to a temporary file in the specified temp folder.
 
-        Only use this for quick saves. For more complex uses, use `asaniczka.save_temp_file()`
+        Only use this for quick saves. For more complex uses, use `asaniczka.save_file()`
 
         Args:
             `content`: The content to be written to the temporary file. Lists,sets will be formatted with newlines
@@ -173,36 +171,8 @@ class ProjectSetup:
 
         """
 
-        # format the content to a string
-        if isinstance(content, list):
-            string_content = "\n".join([str(item) for item in content])
-            if not extension:
-                extension = "txt"
-        elif isinstance(content, set):
-            string_content = "\n".join([str(item) for item in content])
-            if not extension:
-                extension = "txt"
-        elif isinstance(content, dict):
-            string_content = json.dumps(content)
-            if not extension:
-                extension = "json"
-        else:
-            string_content = content
-            if not extension:
-                extension = "txt"
-
-        if not file_name:
-            file_name = f"{str(datetime.datetime.now().date())}_{''.join(random.choices(string.ascii_lowercase, k=20))}"
-
-        extension = extension.replace(".", "")
-
-        # now save the temp file
-        with open(
-            os.path.join(self.temp_folder, f"{file_name}.{extension}"),
-            "w",
-            encoding="utf-8",
-        ) as temp_file:
-            temp_file.write(string_content)
+        path = os.path.join(self.temp_folder, f"{file_name}.{extension}")
+        save_file(path, content, extionsion=extension, file_name=file_name)
 
     def get_elapsed_time(
         self, return_mins: bool = False, full_decimals: bool = False
@@ -375,15 +345,11 @@ def save_file(
         None
 
     Example Usage:
-        `asaniczka.save_temp_file("/path/to/temp/folder", "example_file", "This is the file content", "txt")`
+        `asaniczka.save_file("/path/to/temp/folder", "example_file", "This is the file content", "txt")`
     """
 
     # format the content to a string
-    if isinstance(content, list):
-        string_content = "\n".join([str(item) for item in content])
-        if not extionsion:
-            extionsion = "txt"
-    elif isinstance(content, set):
+    if isinstance(content, (list, set)):
         string_content = "\n".join([str(item) for item in content])
         if not extionsion:
             extionsion = "txt"
@@ -397,7 +363,7 @@ def save_file(
             extionsion = "txt"
 
     if not file_name:
-        file_name = f"{str(datetime.datetime.now().date)}_{''.join(random.choices(string.ascii_lowercase, k=20))}"
+        file_name = f"{str(datetime.datetime.now())}_{''.join(random.choices(string.ascii_lowercase, k=20))}"
 
     # now save the temp file
     with open(
