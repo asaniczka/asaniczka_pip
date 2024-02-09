@@ -80,7 +80,7 @@ class Proxy:
     def to_basic_auth(self) -> dict:
         """outputs the proxy to HTTP Basic Auth format"""
 
-        return f"{self.username}:{self.password}@{self.ip_address}:{self.port}"
+        return f"http://{self.username}:{self.password}@{self.ip_address}:{self.port}"
 
 
 # ------------------------------------------------------------
