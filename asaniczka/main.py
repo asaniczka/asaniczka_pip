@@ -409,6 +409,7 @@ def helper_get_request_no_proxy(
 
 def get_request(
     url: str,
+    headers: dict = None,
     silence_exceptions: bool = False,
     logger: Optional[Union[None, logging.Logger]] = None,
     logger_level_debug: Optional[bool] = False,
@@ -440,9 +441,10 @@ def get_request(
     content = None
     retries = 0
     while retries < 5:
-        headers = {
-            "User-Agent": "Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:109.0) Gecko/20100101 Firefox/119.0"
-        }
+        if not headers:
+            headers = {
+                "User-Agent": "Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:109.0) Gecko/20100101 Firefox/119.0"
+            }
         try:
             if proxy:
                 response = requests.get(
@@ -522,6 +524,7 @@ def get_request(
 
 async def async_get_request(
     url: str,
+    headers: dict = None,
     silence_exceptions: bool = False,
     logger: Optional[Union[None, logging.Logger]] = None,
     logger_level_debug: Optional[bool] = False,
@@ -551,9 +554,10 @@ async def async_get_request(
     retries = 0
 
     while retries < 5:
-        headers = {
-            "User-Agent": "Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:109.0) Gecko/20100101 Firefox/119.0"
-        }
+        if not headers:
+            headers = {
+                "User-Agent": "Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:109.0) Gecko/20100101 Firefox/119.0"
+            }
         try:
             async with httpx.AsyncClient(proxies=proxy) as client:
                 if proxy:
