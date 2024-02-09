@@ -170,9 +170,7 @@ class ProjectSetup:
             None
 
         """
-
-        path = os.path.join(self.temp_folder, f"{file_name}.{extension}")
-        save_file(path, content, extionsion=extension, file_name=file_name)
+        save_file(self.temp_folder, content, extionsion=extension, file_name=file_name)
 
     def get_elapsed_time(
         self, return_mins: bool = False, full_decimals: bool = False
