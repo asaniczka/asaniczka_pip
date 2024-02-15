@@ -25,8 +25,8 @@ import datetime
 import re
 import json
 import asyncio
-import httpx
 
+import httpx
 import pytz
 import requests
 
@@ -264,7 +264,7 @@ def sanitize_filename(name: str, uniqify: bool = False) -> str:
 
 
 def setup_logger(
-    log_file_path: str,
+    log_file_path: os.PathLike = None,
     stream=True,
     file=True,
     stream_level="INFO",
@@ -297,9 +297,14 @@ def setup_logger(
     }
 
     if disable_root_logger:
-        from logging import basicConfig, CRITICAL
-
-        basicConfig(level=CRITICAL)
+        try:
+            logging.getLogger("httpx").setLevel(logging.CRITICAL)
+            logging.getLogger("supabase").setLevel(logging.CRITICAL)
+            logging.getLogger("postgrest").setLevel(logging.CRITICAL)
+            logging.getLogger("realtime").setLevel(logging.CRITICAL)
+            logging.basicConfig(level=logging.CRITICAL)
+        except Exception as error:
+            print(f"Error disabling Supabase logger: {error}")
 
     logger = logging.getLogger("asaniczka")
     logger.setLevel(logging.DEBUG)  # set the logging level to debug

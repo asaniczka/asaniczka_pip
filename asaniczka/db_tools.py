@@ -23,6 +23,7 @@ import time
 import threading
 import random
 import asyncio
+
 import supabase
 from supabase import Client, create_client
 import asaniczka.main as asaniczka
@@ -53,6 +54,15 @@ class SupabaseManager:
         self.db_backup_loop = False
         self.is_db_backup_running = False
         self.sb_client: Client = self.create_supabse_client(should_return=True)
+
+        try:
+            logging.getLogger("httpx").setLevel(logging.CRITICAL)
+            logging.getLogger("supabase").setLevel(logging.CRITICAL)
+            logging.getLogger("postgrest").setLevel(logging.CRITICAL)
+            logging.getLogger("realtime").setLevel(logging.CRITICAL)
+            logging.basicConfig(level=logging.CRITICAL)
+        except Exception as error:
+            print(f"Error disabling Supabase logger: {error}")
 
     def check_supabase_cli_installation(self) -> None:
         """function checks if supabase cli is installed on the system"""
