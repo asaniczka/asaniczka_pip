@@ -302,7 +302,7 @@ def setup_logger(
             logging.getLogger("supabase").setLevel(logging.CRITICAL)
             logging.getLogger("postgrest").setLevel(logging.CRITICAL)
             logging.getLogger("realtime").setLevel(logging.CRITICAL)
-            logging.basicConfig(level=logging.CRITICAL)
+            logging.basicConfig(level=logging.CRITICAL, force=True)
         except Exception as error:
             print(f"Error disabling Supabase logger: {error}")
 

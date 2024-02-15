@@ -4,7 +4,7 @@ build-backend = 'setuptools.build_meta'
 
 [project]
 name = "asaniczka"
-version = "2.7.9"
+version = "2.7.10"
 description = "All my commonly used fuctions"
 readme = "README.md"
 dependencies = [

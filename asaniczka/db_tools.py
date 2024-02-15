@@ -55,15 +55,6 @@ class SupabaseManager:
         self.is_db_backup_running = False
         self.sb_client: Client = self.create_supabse_client(should_return=True)
 
-        try:
-            logging.getLogger("httpx").setLevel(logging.CRITICAL)
-            logging.getLogger("supabase").setLevel(logging.CRITICAL)
-            logging.getLogger("postgrest").setLevel(logging.CRITICAL)
-            logging.getLogger("realtime").setLevel(logging.CRITICAL)
-            logging.basicConfig(level=logging.CRITICAL)
-        except Exception as error:
-            print(f"Error disabling Supabase logger: {error}")
-
     def check_supabase_cli_installation(self) -> None:
         """function checks if supabase cli is installed on the system"""
         # pylint: disable=bare-except
@@ -272,10 +263,21 @@ class SupabaseManager:
             self.logger.warning("Supabase client not created since no url or anon key")
             return None
 
-        if should_return:
-            return create_client(self.sb_api_url, self.sb_anon_key)
+        client = create_client(self.sb_api_url, self.sb_anon_key)
 
-        self.sb_client = create_client(self.sb_api_url, self.sb_anon_key)
+        try:
+            logging.getLogger("httpx").setLevel(logging.CRITICAL)
+            logging.getLogger("supabase").setLevel(logging.CRITICAL)
+            logging.getLogger("postgrest").setLevel(logging.CRITICAL)
+            logging.getLogger("realtime").setLevel(logging.CRITICAL)
+            logging.basicConfig(level=logging.CRITICAL, force=True)
+        except Exception as error:
+            print(f"Error disabling Supabase logger: {error}")
+
+        if should_return:
+            return client
+
+        self.sb_client = client
         self.logger.info("Supabase client created successfully")
         return None
 
