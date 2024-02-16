@@ -630,6 +630,7 @@ def post_request(
     logger: Optional[Union[None, logging.Logger]] = None,
     logger_level_debug: Optional[bool] = False,
     proxy: Union[str, None] = None,
+    retry_count: int = 5,
     retry_sleep_time: int = 5,
     timeout: int = 45,
 ) -> str | None:
@@ -656,7 +657,7 @@ def post_request(
     """
     content = None
     retries = 0
-    while retries < 5:
+    while retries <= retry_count:
         if not headers:
             headers = {
                 "User-Agent": "Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:109.0) Gecko/20100101 Firefox/119.0"
@@ -676,10 +677,11 @@ def post_request(
                 )
         # pylint: disable=broad-except
         except Exception as error:
-            if logger_level_debug:
-                logger.debug("Failed to POST request. %s", format_error(error))
-            else:
-                logger.warning("Failed to POST request. %s", format_error(error))
+            if logger:
+                if logger_level_debug:
+                    logger.debug("Failed to POST request. %s", format_error(error))
+                else:
+                    logger.warning("Failed to POST request. %s", format_error(error))
 
             retries += 1
             continue
@@ -694,14 +696,14 @@ def post_request(
             # if logger level is said to be debug, do debug, otherwise it's a warning
             if logger_level_debug:
                 logger.debug(
-                    "Failed to get request. \
+                    "Failed to POST request. \
                     Status code %d, Response text: %s",
                     response.status_code,
                     format_error(response.text),
                 )
             else:
                 logger.warning(
-                    "Failed to get request. \
+                    "Failed to POST request. \
                     Status code %d, Response text: %s",
                     response.status_code,
                     format_error(response.text),
@@ -726,7 +728,7 @@ def post_request(
         break
 
     # raise an error if we tried more than 5 and still failed
-    if retries >= 5:
+    if retries > retry_count:
         if not silence_exceptions:
             raise RuntimeError(
                 f"No response from website. \
