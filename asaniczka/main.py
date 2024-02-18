@@ -162,7 +162,7 @@ class ProjectSetup:
         Only use this for quick saves. For more complex uses, use `asaniczka.save_file()`
 
         Args:
-            `content`: The content to be written to the temporary file. Lists,sets will be formatted with newlines
+            `content`: The content to be written to the temporary file. Lists, sets will be formatted with newlines. For JSON lists, send json as the extention
             `extension`: The file extension of the temporary file.
             `file_name`: The name of the temporary file.
 
@@ -340,7 +340,7 @@ def save_file(
 
     Args:
         `temp_folder`: The path to the temporary folder.
-        `content`: The content to be written to the temporary file. Lists,sets will be formatted with newlines
+        `content`: The content to be written to the temporary file. Lists,sets will be formatted with newlines. For JSON lists, send json as the extention
         `file_name`: The name of the temporary file.
         `extension`: The file extension of the temporary file.
 
@@ -353,9 +353,12 @@ def save_file(
 
     # format the content to a string
     if isinstance(content, (list, set)):
-        string_content = "\n".join([str(item) for item in content])
-        if not extionsion:
-            extionsion = "txt"
+        if extionsion != "json" or extionsion != ".json":
+            string_content = "\n".join([str(item) for item in content])
+            if not extionsion:
+                extionsion = "txt"
+        else:
+            string_content = json.dumps(content)
     elif isinstance(content, dict):
         string_content = json.dumps(content)
         if not extionsion:
