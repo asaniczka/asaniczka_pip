@@ -868,3 +868,9 @@ def create_dir(folder: os.PathLike) -> os.PathLike:
 
     os.makedirs(folder, exist_ok=True)
     return folder
+
+
+def generate_random_id() -> int:
+    """Generates a random ID. Use for unique filenames or cross referencing error IDS"""
+
+    return random.choice(range(10000, 100000000000000))
