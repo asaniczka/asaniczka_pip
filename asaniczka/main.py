@@ -1,17 +1,18 @@
 """
-Asaniczka module provides quick functions to get up and running with a scraper.
+### Introduction
+This module is a tool that helps in setting up projects, logging activities, making HTTP requests, and saving data in various formats.
 
-## Available functions:
-
-1. setup_logger()
-2. save_temp_file()
-3. format_error()
-4. get_request()
-5. create_dir()
-
-## Available Classes:
-1. ProjectSetup
-2. Timer
+### Highlevel Overview
+- The script includes functions to:
+  - Create project structures.
+  - Generate temporary file and log file paths.
+  - Save content to temporary files.
+  - Calculate elapsed time.
+  - Set up loggers for logging activities.
+  - Sanitize filenames and remove special symbols.
+  - Perform basic HTTP GET and POST requests.
+  - Save data in JSON and ndjson formats.
+  - Generate random IDs for identification.
 
 """
 
@@ -433,7 +434,21 @@ def format_error(error: str) -> str:
 def helper_get_request_no_proxy(
     url: str, headers: dict, timeout: int, session: requests.Session = None
 ) -> str | None:
-    """Helper function for asaniczka module. Only for internal use"""
+    """
+    Helper function for asaniczka module. Only for internal use.
+
+    ### Responsibility:
+    - Make a GET request to a URL without using a proxy.
+
+    ### Args:
+    - `url`: The URL to make the GET request.
+    - `headers`: The headers to be included in the request.
+    - `timeout`: The timeout value for the request.
+    - `session` (optional): A requests Session object for making the request.
+
+    ### Returns:
+    - `str` or `None`: The response from the GET request or None if an error occurred.
+    """
 
     if session:
         response = session.get(url, headers=headers, timeout=timeout)
@@ -457,22 +472,26 @@ def get_request(
     """
     Makes a basic HTTP GET request to the given URL.
 
-    Args:
-        `url`: The URL to make the request to.
-        `silence_exceptions`: Will not raise any exceptions. Use logger_level_debug to supress errors in the console
-        `logger: The logger instance to log warnings.
-        `logger_level_debug`: Whether to log warnings at debug level.
-        `proxy`: proxy to use.
-        `sessions`: a requests session if you decide to use one
+    ### Responsibility:
+    - Make a GET request to a URL with options for handling exceptions, logging, proxies, and session usage.
+    - Retry the request multiple times and raise an error if unsuccessful after 5 retries.
 
-    Returns:
-        str: The content of the response if the request was successful.
+    ### Args:
+    - `url`: The URL to make the GET request.
+    - `headers`: (optional) The headers to be included in the request.
+    - `silence_exceptions`: Will not raise any exceptions if set to True.
+    - `logger`: The logger instance to log warnings.
+    - `logger_level_debug`: Whether to log warnings at debug level.
+    - `proxy`: Proxy to use for the request.
+    - `session`: A requests Session object to use for the request.
+    - `retry_sleep_time`: The time to sleep between retries.
+    - `timeout`: The timeout value for the request.
 
-    Raises:
-        RuntimeError: If the request failed after 5 retries.
+    ### Returns:
+    - `str` or `None`: The content of the response if the request was successful, or None if an error occurred.
 
-    Example Usage:
-        `response_content = asaniczka.get_request("https://example.com", logger)`
+    ### Raises:
+    - `RuntimeError`: If the request failed after 5 retries.
     """
     content = None
     retries = 0
@@ -571,21 +590,28 @@ async def async_get_request(
     """
     Makes an async HTTP GET request to the given URL.
 
-    Args:
-        `url`: The URL to make the request to.
-        `silence_exceptions`: Will not raise any exceptions. Use logger_level_debug to suppress errors in the console.
-        `logger`: The logger instance to log warnings.
-        `logger_level_debug`: Whether to log warnings at debug level.
-        `proxy`: Proxy to use.
+    ### Responsibility:
+    - Make an asynchronous GET request to a URL with options for handling exceptions, logging, proxies.
+    - Retry the request multiple times and raise an error if unsuccessful after 5 retries.
 
-    Returns:
-        str: The content of the response if the request was successful.
+    ### Args:
+    - `url`: The URL to make the GET request.
+    - `headers`: (optional) The headers to be included in the request.
+    - `silence_exceptions`: Will not raise any exceptions if set to True.
+    - `logger`: The logger instance to log warnings.
+    - `logger_level_debug`: Whether to log warnings at debug level.
+    - `proxy`: Proxy to use for the request.
+    - `timeout`: The timeout value for the request.
+    - `retry_sleep_time`: The time to sleep between retries.
 
-    Raises:
-        RuntimeError: If the request failed after 5 retries.
+    ### Returns:
+    - `str` or `None`: The content of the response if the request was successful, or None if an error occurred.
+
+    ### Raises:
+    - `RuntimeError`: If the request failed after 5 retries.
 
     Example Usage:
-        `response_content = await async_get_request("https://example.com", logger)`
+        `response_content = await async_get_request("https://example.com", headers={"User-Agent": "Mozilla/5.0"}, logger=logger)`
     """
     retries = 0
 
@@ -670,20 +696,27 @@ def post_request(
     """
     Makes a basic HTTP POST request to the given URL.
 
-    Args:
-        `url`: The URL to make the request to.
-        `headers`: The headers for the request.
-        `payload`: The payload for the request.
-        `silence_exceptions`: Will not raise any exceptions. Use logger_level_debug to suppress errors in the console.
-        `logger`: The logger instance to log warnings.
-        `logger_level_debug`: Whether to log warnings at debug level.
-        `proxy`: Proxy to use.
+    ### Responsibility:
+    - Make a POST request to a URL with options for handling exceptions, logging, proxies, payload, and session usage.
+    - Retry the request multiple times and raise an error if unsuccessful after specified retries.
 
-    Returns:
-        str: The content of the response if the request was successful. Returns None if the request failed.
+    ### Args:
+    - `url`: The URL to make the POST request.
+    - `headers`: The headers to be included in the request.
+    - `payload`: The data to be sent in the request body.
+    - `silence_exceptions`: Will not raise any exceptions if set to True.
+    - `logger`: The logger instance to log warnings.
+    - `logger_level_debug`: Whether to log warnings at debug level.
+    - `proxy`: Proxy to use for the request.
+    - `retry_count`: Number of times to retry the request.
+    - `retry_sleep_time`: The time to sleep between retries.
+    - `timeout`: The timeout value for the request.
 
-    Raises:
-        RuntimeError: If the request failed after 5 retries.
+    ### Returns:
+    - `str` or `None`: The content of the response if the request was successful, or None if an error occurred.
+
+    ### Raises:
+    - `RuntimeError`: If the request failed after the specified number of retries.
 
     Example Usage:
         `response_content = asaniczka.post_request("https://example.com", headers, payload, logger)`
@@ -784,25 +817,31 @@ async def async_post_request(
     timeout: int = 45,
 ) -> str | None:
     """
-    Makes a basic HTTP POST request to the given URL.
+    Makes an asynchronous HTTP POST request to the given URL.
 
-    Args:
-        `url`: The URL to make the request to.
-        `headers`: The headers for the request.
-        `payload`: The payload for the request.
-        `silence_exceptions`: Will not raise any exceptions. Use logger_level_debug to suppress errors in the console.
-        `logger`: The logger instance to log warnings.
-        `logger_level_debug`: Whether to log warnings at debug level.
-        `proxy`: Proxy to use.
+    ### Responsibility:
+    - Make an asynchronous POST request to a URL with options for handling exceptions, logging, proxies, payload, and session usage.
+    - Retry the request multiple times and raise an error if unsuccessful after 5 retries.
 
-    Returns:
-        str: The content of the response if the request was successful. Returns None if the request failed.
+    ### Args:
+    - `url`: The URL to make the POST request.
+    - `headers`: The headers to be included in the request.
+    - `payload`: The data to be sent in the request body.
+    - `silence_exceptions`: Will not raise any exceptions if set to True.
+    - `logger`: The logger instance to log warnings.
+    - `logger_level_debug`: Whether to log warnings at debug level.
+    - `proxy`: Proxy to use for the request.
+    - `retry_sleep_time`: The time to sleep between retries.
+    - `timeout`: The timeout value for the request.
 
-    Raises:
-        RuntimeError: If the request failed after 5 retries.
+    ### Returns:
+    - `str` or `None`: The content of the response if the request was successful, or None if an error occurred.
+
+    ### Raises:
+    - `RuntimeError`: If the request failed after 5 retries.
 
     Example Usage:
-        `response_content = asaniczka.post_request("https://example.com", headers, payload, logger)`
+        `response_content = asaniczka.async_post_request("https://example.com", headers, payload, logger)`
     """
     content = None
     retries = 0
@@ -886,21 +925,73 @@ async def async_post_request(
 
 
 def save_ndjson(data: dict, file_path: str) -> None:
-    """Saves the given data to the same ndjson file"""
-    # pylint: disable=import-outside-toplevel
+    """
+    Saves the given data to an ndjson file.
+
+    ### Responsibility:
+    - Append the given data as a JSON line to the specified ndjson file.
+
+    ### Args:
+    - `data`: The dictionary data to be saved in ndjson format.
+    - `file_path`: The path to the ndjson file to which data will be appended.
+
+    ### Returns:
+    - `None`: This function does not return anything.
+
+    ### Raises:
+    - No specific exceptions are raised by this function.
+
+    Example Usage:
+        `save_ndjson({"key": "value"}, "data.ndjson")`
+    """
 
     with open(file_path, "a", encoding="utf-8") as dump_file:
         dump_file.write(f"{json.dumps(data)}\n")
 
 
 def create_dir(folder: os.PathLike) -> os.PathLike:
-    """creates a dir. Must send a valid path"""
+    """
+    Creates a directory at the given path.
+
+    ### Responsibility:
+    - Create a directory at the specified path.
+    - If the directory already exists, do not raise an error.
+
+    ### Args:
+    - `folder`: The path where the directory should be created.
+
+    ### Returns:
+    - `os.PathLike`: The path of the directory that was created.
+
+    ### Raises:
+    - No specific exceptions are raised by this function.
+
+    Example Usage:
+        `new_folder = create_dir("/path/to/folder")`
+    """
 
     os.makedirs(folder, exist_ok=True)
     return folder
 
 
 def generate_random_id() -> int:
-    """Generates a random ID. Use for unique filenames or cross referencing error IDS"""
+    """
+    Generates a random integer ID.
+
+    ### Responsibility:
+    - Generate a random integer ID within the range [10000, 100000000000000) for unique identification purposes.
+
+    ### Args:
+    - This function does not take any arguments.
+
+    ### Returns:
+    - `int`: A randomly generated integer ID.
+
+    ### Raises:
+    - No specific exceptions are raised by this function.
+
+    Example Usage:
+        `unique_id = generate_random_id()`
+    """
 
     return random.choice(range(10000, 100000000000000))
