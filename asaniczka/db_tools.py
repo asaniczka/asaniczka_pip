@@ -24,8 +24,6 @@ import threading
 import random
 import asyncio
 
-import supabase
-from supabase import Client, create_client
 import asaniczka.main as asaniczka
 
 
@@ -53,7 +51,6 @@ class SupabaseManager:
         self.sb_anon_key = sb_anon_key
         self.db_backup_loop = False
         self.is_db_backup_running = False
-        self.sb_client: Client = self.create_supabse_client(should_return=True)
 
     def check_supabase_cli_installation(self) -> None:
         """function checks if supabase cli is installed on the system"""
@@ -191,8 +188,6 @@ class SupabaseManager:
             for key, value in items_to_log.items():
                 self.project.logger.info(f"Supabase {key}: {value}")
 
-            self.create_supabse_client()
-
             self.db_backup_loop = True
             background_backup = threading.Thread(
                 target=run_backup_every_hour, args=[self]
@@ -255,81 +250,6 @@ class SupabaseManager:
             raise RuntimeError(
                 "Unable to stop Supabase. Are you sure Docker is running?"
             ) from error
-
-    def create_supabse_client(self, should_return=False) -> supabase.Client:
-        """Create a supabase client"""
-
-        if not self.sb_anon_key or not self.sb_api_url:
-            self.logger.warning("Supabase client not created since no url or anon key")
-            return None
-
-        client = create_client(self.sb_api_url, self.sb_anon_key)
-
-        try:
-            logging.getLogger("httpx").setLevel(logging.CRITICAL)
-            logging.getLogger("supabase").setLevel(logging.CRITICAL)
-            logging.getLogger("postgrest").setLevel(logging.CRITICAL)
-            logging.getLogger("realtime").setLevel(logging.CRITICAL)
-            logging.basicConfig(level=logging.CRITICAL, force=True)
-        except Exception as error:
-            print(f"Error disabling Supabase logger: {error}")
-
-        if should_return:
-            return client
-
-        self.sb_client = client
-        self.logger.info("Supabase client created successfully")
-        return None
-
-    def insert_row_to_db(
-        self,
-        data_dict: dict,
-        table_name: str,
-        return_minimal: Optional[bool] = True,
-        suppress_errors: Optional[bool] = True,
-        suppress_logs=False,
-    ) -> None | supabase.PostgrestAPIResponse:
-        """Function will run an insert query with the given data to the table via supabase api"""
-        try:
-            data = (
-                self.sb_client.table(table_name)
-                .insert(data_dict, returning="minimal")
-                .execute()
-            )
-        # pylint:disable=broad-except
-        except Exception as error:
-            if not suppress_logs:
-                self.logger.error(
-                    f"Error when inserting to {table_name}:    {asaniczka.format_error(error)}"
-                )
-            if not suppress_errors:
-                raise RuntimeError(
-                    f"Error when inserting to db: {asaniczka.format_error(error)}"
-                ) from error
-
-        if not return_minimal:
-            return data
-        return None
-
-    async def async_insert_row_to_db(
-        self,
-        data_dict: dict,
-        table_name: str,
-        return_minimal: Optional[bool] = True,
-        suppress_errors: Optional[bool] = True,
-        suppress_logs=False,
-    ) -> None | supabase.PostgrestAPIResponse:
-        """Async version of insert_row_to_db.
-        YOu don't have to wait for a response if you don't want to"""
-
-        return await asyncio.to_thread(
-            self.insert_row_to_db,
-            data_dict,
-            table_name,
-            return_minimal=return_minimal,
-            suppress_errors=suppress_errors,
-            suppress_logs=suppress_logs,
-        )
 
 
 def check_psql_installation(

@@ -36,45 +36,49 @@ import requests
 
 
 class ProjectSetup:
-    """A class that sets up project folders and provides access to their paths.
+    """
+    Responsible for setting up a project with necessary folders and properties.
 
-    Args:
-        `project_name`: The name of the project.
+    ### Responsibility:
+    - Initialize the project with a project name and path, creating necessary folders.
+    - Generate temporary file paths, log file paths, and sanitize file names.
+    - Save content to a temporary file in the project's temp folder.
+    - Calculate the elapsed time since starting the project.
 
-    Attributes:
-        project_name
-        project_folder
-        data_folder
-        temp_folder
-        log_folder
-        log_file_path
-        logger
-        sb_api_url
-        sb_db_url
-        sb_studio_url
-        sb_anon_key
+    ### Args:
+        - `project_name`: The name of the project.
+        - `project_path`: The path where the project folders will be created. Defaults to the current directory.
 
-    Functions:
-        temp_file_path()
-        generate_log_file_path()
-        sanitize_filename()
-        save_temp_file()
-        create_new_subfolder()
-        get_elapsed_time()
-        check_supabase_cli_installation()
-        start_supabase_instance()
-        stop_supabase_instance()
+    ### Attributes:
+    - project_name: The name of the project.
+    - project_folder: The project's main folder path.
+    - data_folder: The folder path for project data.
+    - temp_folder: The folder path for temporary files.
+    - log_folder: The folder path for log files.
+    - db_folder: The folder path for project databases.
+    - start_time: The starting time of the project.
+    - logger: Logger object for logging.
 
-    Example Usage:
-        project = ProjectFolders("MyProject")
+    ### Functions:
+    - create_folder: Create a folder in the given parent directory.
+    - generate_temp_file_path: Generate a temporary file path with optional name and extension.
+    - generate_log_file_path: Generate a log file path with optional date and UTC settings.
+    - sanitize_filename: Sanitize a given filename.
+    - save_temp_file: Save content to a temporary file in the project's temp folder.
+    - get_elapsed_time: Calculate the elapsed time since starting the project.
     """
 
-    def __init__(self, project_name: str) -> None:
+    def __init__(self, project_name: str, project_path: os.PathLike = None) -> None:
         if not project_name:
             raise ValueError("A project name is required.")
 
         self.project_name = project_name
-        self.project_folder = self.create_folder(os.getcwd(), self.project_name)
+
+        if not project_path:
+            self.project_folder = self.create_folder(os.getcwd(), self.project_name)
+        else:
+            self.project_folder = self.create_folder(project_path, self.project_name)
+
         self.data_folder = self.create_folder(self.project_folder, "data")
         self.temp_folder = self.create_folder(self.project_folder, "temp")
         self.log_folder = self.create_folder(self.project_folder, "logs")
@@ -94,14 +98,19 @@ class ProjectSetup:
         name: Optional[Union[str, None]] = None,
         extension: Optional[Union[str, None]] = "txt",
     ) -> os.PathLike:
-        """Return a temporary file name as a path.
+        """
+        Return a temporary file name as a path.
+
+        Responsibility:
+        - Generate a temporary file path with a given name and extension.
+        - Sanitize the filename by removing any invalid characters.
 
         Args:
-            `name`: The file name. Defaults to random.
-            `extension`: The file extension to use. Defaults to 'txt'.
+            - `name`: The file name. Defaults to random.
+            - `extension`: The file extension to use. Defaults to 'txt'.
 
         Returns:
-            Union[str, Path]: The path to the created temporary file.
+            - os.PathLike: The path to the created temporary file.
 
         """
 
@@ -119,15 +128,20 @@ class ProjectSetup:
     def generate_log_file_path(
         self, dated: bool = False, utc: bool = False
     ) -> os.PathLike:
-        """log_file_path
+        """
+        Generate a log file path with optional date and UTC settings.
+
+        Responsibility:
+        - Generate a log file path with the project name.
+        - Include date in the file name if specified.
+        - Use UTC time if specified.
 
         Args:
-            `dated`: Whether to include the date in the file name. Defaults to False.
-            `utc`: Whether to use UTC time instead of local time. Defaults to False.
+            - `dated`: Whether to include the date in the file name. Defaults to False.
+            - `utc`: Whether to use UTC time instead of local time. Defaults to False.
 
         Returns:
-            Union[str, Path]: The path to the log file.
-
+            - os.PathLike: The path to the log file.
         """
 
         if utc:
@@ -157,18 +171,20 @@ class ProjectSetup:
         extension: Optional[Union[None, str]] = None,
         file_name: Optional[Union[None, str]] = None,
     ) -> None:
-        """Saves the given content to a temporary file in the specified temp folder.
+        """
+        Save the given content to a temporary file in the project temp folder.
 
-        Only use this for quick saves. For more complex uses, use `asaniczka.save_file()`
+        Responsibility:
+        - Save the content to a temporary file in the project temp folder.
+        - Recommend using `asaniczka.save_file()` for more complex operations.
 
         Args:
-            `content`: The content to be written to the temporary file. Lists, sets will be formatted with newlines. For JSON lists, send json as the extention
-            `extension`: The file extension of the temporary file.
-            `file_name`: The name of the temporary file.
+            - `content`: The content to be written to the temporary file. Lists, sets will be formatted with newlines. For JSON lists, send json as the extension.
+            - `extension`: The file extension of the temporary file.
+            - `file_name`: The name of the temporary file.
 
         Returns:
             None
-
         """
         save_file(self.temp_folder, content, extionsion=extension, file_name=file_name)
 
@@ -176,11 +192,16 @@ class ProjectSetup:
         self, return_mins: bool = False, full_decimals: bool = False
     ) -> float:
         """
-        Calculates the elapsed time since starting the project.
+        Calculate the elapsed time since starting the project.
+
+        Responsibility:
+        - Calculate the time elapsed since the project started.
+        - Allow the option to return the time in minutes.
+        - Provide an option to control the number of decimal places in the time returned.
 
         Args:
-            `return_mins`: Whether to return the time in minutes. Defaults to False.
-            `full_decimals`: Whether to return all decimal places of the time. Defaults to False.
+            - `return_mins`: Whether to return the time in minutes. Defaults to False.
+            - `full_decimals`: Whether to return all decimal places of the time. Defaults to False.
 
         Returns:
             float: The elapsed time in seconds if return_mins is False, or the elapsed time in minutes if return_mins is True.
@@ -198,16 +219,15 @@ class ProjectSetup:
         return elapsed_time
 
 
-class Timer:
+class Stopwatch:
     """
-    A simple timer class to measure elapsed time.
+    A simple stopwatch class to measure elapsed time.
 
     Attributes:
-        `start_time`: The start time of the timer.
+        - `start_time`: The start time of the timer.
 
     Methods:
-        `lap()`: Calculates the elapsed time since starting the timer.
-
+        - `lap()`: Calculates the elapsed time since starting the timer.
     """
 
     def __init__(self) -> None:
@@ -217,12 +237,16 @@ class Timer:
         """
         Calculates the elapsed time since starting the timer.
 
-        Args:
-            `return_mins`: Whether to return the time in minutes. Defaults to False.
-            `full_decimals`: Whether to return all decimal places of the time. Defaults to False.
+        ### Responsibility:
+        - Calculate the elapsed time based on the difference between the end time and start time.
+        - Convert the elapsed time to minutes if specified.
 
-        Returns:
-            float: The elapsed time in seconds if return_mins is False, or the elapsed time in minutes if return_mins is True.
+        ### Args:
+        - `return_mins`: Whether to return the time in minutes. Defaults to False.
+        - `full_decimals`: Whether to return all decimal places of the time. Defaults to False.
+
+        ### Returns:
+        - float: The elapsed time in seconds if return_mins is False, or the elapsed time in minutes if return_mins is True.
         """
 
         end_time = time.time()
@@ -241,15 +265,19 @@ class Timer:
 
 
 def sanitize_filename(name: str, uniqify: bool = False) -> str:
-    """Remove symbols from a filename and return a sanitized version.
+    """
+    Remove symbols from a filename and return a sanitized version.
 
-    Args:
-        `name`: The filename to sanitize.
-        `uniqify`: add a random int at the end
+    ### Responsibility:
+    - Remove special symbols from the given filename to make it suitable for use as a file name.
+    - Optionally add a random integer at the end of the filename if the `uniqify` parameter is set to True.
 
-    Returns:
-        str: The sanitized filename.
+    ### Args:
+    - `name`: The filename to sanitize.
+    - `uniqify`: Whether to add a random integer at the end of the sanitized filename. Defaults to False.
 
+    ### Returns:
+    - str: The sanitized filename.
     """
     sanitized_name = name.replace(" ", "_")
     sanitized_name = re.sub(r"[^a-zA-Z\d_]", "", sanitized_name)
@@ -269,22 +297,27 @@ def setup_logger(
     file=True,
     stream_level="INFO",
     file_level="DEBUG",
-    disable_root_logger=True,
 ) -> logging:
-    """Set up a logger and return the logger instance.
+    """
+    Set up a logger and return the logger instance.
 
-    Args:
-        `log_file_path` : The path of the log file.
-        `stream`: Whether to create a stream handler (default: True)
-        `file`: Whether to create a file handler (default: True)
-        `stream_level` : level of stream handler. Must be valid logging level
-        `disable_root_logger`: Set the root logger to critical only
+    ### Responsibility:
+    - Configure a logger with specific handlers (stream and file) based on the provided parameters.
+    - Set the log level and format for both handlers.
+    - Return the configured logger instance.
 
-    Returns:
-        logging.Logger: The configured logger instance.
+    ### Args:
+    - `log_file_path` : The path of the log file.
+    - `stream`: Whether to create a stream handler. Defaults to True.
+    - `file`: Whether to create a file handler. Defaults to True.
+    - `stream_level` : Level of the stream handler. Must be a valid logging level.
+    - `file_level`: Level of the file handler. Must be a valid logging level.
 
-    Example Usage:
-        `LOGGER = asaniczka.setup_logger("/path/to/log/file.log")`
+    ### Returns:
+    - logging.Logger: The configured logger instance.
+
+    ### Raises:
+    - `ValueError`: If the provided stream_level or file_level is not a valid logging level.
     """
 
     level_name_to_int_lookup = {
@@ -295,16 +328,6 @@ def setup_logger(
         "error": 40,
         "critical": 50,
     }
-
-    if disable_root_logger:
-        try:
-            logging.getLogger("httpx").setLevel(logging.CRITICAL)
-            logging.getLogger("supabase").setLevel(logging.CRITICAL)
-            logging.getLogger("postgrest").setLevel(logging.CRITICAL)
-            logging.getLogger("realtime").setLevel(logging.CRITICAL)
-            logging.basicConfig(level=logging.CRITICAL, force=True)
-        except Exception as error:
-            print(f"Error disabling Supabase logger: {error}")
 
     logger = logging.getLogger("asaniczka")
     logger.setLevel(logging.DEBUG)  # set the logging level to debug
@@ -336,19 +359,23 @@ def save_file(
     extionsion: Optional[Union[str, None]] = None,
     file_name: Optional[Union[str, None]] = None,
 ) -> None:
-    """Saves the given content to a temporary file in the specified temp folder.
+    """
+    Saves the given content to a temporary file in the specified temp folder.
 
-    Args:
-        `temp_folder`: The path to the temporary folder.
-        `content`: The content to be written to the temporary file. Lists,sets will be formatted with newlines. For JSON lists, send json as the extention
-        `file_name`: The name of the temporary file.
-        `extension`: The file extension of the temporary file.
+    ### Responsibility:
+    - Formats the content based on its type (str, set, list, dict) and saves it to a temporary file in the specified folder with the given file name and extension.
 
-    Returns:
+    ### Args:
+        - `folder`: The path to the temporary folder.
+        - `content`: The content to be written to the temporary file. Lists and sets will be formatted with newlines. For JSON lists, specify the extension as "json".
+        - `file_name`: The name of the temporary file.
+        - `extension`: The file extension of the temporary file.
+
+    ### Returns:
         None
 
-    Example Usage:
-        `asaniczka.save_file("/path/to/temp/folder", "example_file", "This is the file content", "txt")`
+    ### Example Usage:
+        `save_file("/path/to/temp/folder", "This is the file content", "txt", "example_file")`
     """
 
     # format the content to a string
@@ -382,11 +409,14 @@ def format_error(error: str) -> str:
     """
     Removes newlines from the given error string.
 
-    Args:
-        `error`: The error string to be formatted.
+    ### Responsibility:
+    - Format the error string by removing newlines.
 
-    Returns:
-        str: The formatted error string.
+    ### Args:
+    - `error`: The error string to be formatted.
+
+    ### Returns:
+    - `str`: The formatted error string.
 
     Example Usage:
         `formatted_error = asaniczka.format_error(error)`
