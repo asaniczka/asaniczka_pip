@@ -1,5 +1,5 @@
 """
-This module has some useful function that will help you test and build a scraper.
+This module provides some useful functions to test and build a scraper.
 
 Get started with `from asaniczka import scraper_helper as helper`
 
@@ -38,13 +38,22 @@ class Proxy:
     """
     General class to store and format proxies
 
-    Args:
-        `str_proxy`: proxy data as a string
-        `provider`: Provider of the proxy. Use ProxyProvider Enum
+    ### Responsibility:
+    - Initialize a Proxy object with proxy data and provider
+    - Parse a webshare proxy format
+    - Convert the proxy to playwright proxy format
+    - Convert the proxy to HTTP Basic Auth format
 
-    Functions:
-        `to_playwright`: Return a playwright proxy compatible dict
-        `to_basic_auth`: Return a HTTP Basic Auth standard Proxy
+    ### Args:
+    - `str_proxy`: proxy data as a string
+    - `provider`: Provider of the proxy. Use ProxyProvider Enum
+
+    ### Returns:
+    - `to_playwright`: Return a dictionary containing the proxy data in playwright format
+    - `to_basic_auth`: Return a dictionary containing the proxy data in HTTP Basic Auth format
+
+    ### Raises:
+    - `Error`: May raise errors if the proxy data is not in expected format
 
     """
 
@@ -60,7 +69,18 @@ class Proxy:
             self.parse_webshare()
 
     def parse_webshare(self) -> None:
-        """parse webshare proxy format"""
+        """
+        Parse the webshare proxy format.
+
+        ### Args:
+        - No explicit arguments taken as input directly. It accesses class attributes.
+
+        ### Returns:
+        - Does not explicitly return anything but updates the class attributes with parsed proxy data.
+
+        ### Raises:
+        - `IndexError`: If the split_proxy list does not have enough elements to assign to ip_address, port, username, and password.
+        """
 
         split_proxy = self.raw_string.split(":")
         self.ip_address = split_proxy[0]
@@ -69,7 +89,18 @@ class Proxy:
         self.password = split_proxy[3]
 
     def to_playwright(self) -> dict:
-        """outputs the proxy to playwright proxy format"""
+        """
+        Outputs the proxy to playwright proxy format.
+
+        ### Args:
+        - No explicit arguments taken as input directly. It accesses class attributes.
+
+        ### Returns:
+        - `to_playwright`: Returns a dictionary containing the proxy data in playwright format with keys server, username, and password.
+
+        ### Raises:
+        - No explicit raises.
+        """
 
         return {
             "server": f"{self.ip_address}:{self.port}",
@@ -78,7 +109,18 @@ class Proxy:
         }
 
     def to_basic_auth(self) -> dict:
-        """outputs the proxy to HTTP Basic Auth format"""
+        """
+        Outputs the proxy to HTTP Basic Auth format.
+
+        ### Args:
+        - No explicit arguments taken as input directly. It accesses class attributes.
+
+        ### Returns:
+        - `to_basic_auth`: Returns the proxy data in HTTP Basic Auth format as a formatted string.
+
+        ### Raises:
+        - No explicit raises.
+        """
 
         return f"http://{self.username}:{self.password}@{self.ip_address}:{self.port}"
 
@@ -98,24 +140,24 @@ def send_request(
     is_get=True,
 ) -> None | int:
     """
-    Sends a request to the given URL.
+    Sends a request to the given URL and returns the response status code if required.
 
-    Args:
-        `url` : The URL to send the request to.
-        `project`: The project setup instance.
-        `count_lock`: The lock object for thread synchronization.
-        `burst_data`: The burst data dictionary containing information about the number of requests made and rate limit.
-        `pbar`: The progress bar instance to track the requests. (default: None)
-        `check`: Whether to check the response status code. If True, the function will return the status code. If False, the function will update the burst data and return None. (default: True)
-        `headers`: The headers to include in the request. If None, default headers will be used. (default: None)
-        `data`: The data to include in the request body.(default: None)
-        `is_get`: True if it is a GET request, False if it is a POST request. (default: True)
+    ### Args:
+    - `url`: The URL to send the request to.
+    - `timer`: The timer object used for tracking time.
+    - `count_lock`: The lock object for thread synchronization.
+    - `burst_data`: The burst data dictionary containing information about the number of requests made and rate limit.
+    - `pbar`: The progress bar instance to track the requests. (default: None)
+    - `check`: Whether to check the response status code. If True, the function will return the status code. If False, the function will update the burst data and return None. (default: True)
+    - `headers`: The headers to include in the request. If None, default headers will be used. (default: None)
+    - `data`: The data to include in the request body. (default: None)
+    - `is_get`: True if it is a GET request, False if it is a POST request. (default: True)
 
-    Returns:
-        None or int: If check is True, returns the response status code. If check is False, returns None.
+    ### Returns:
+    - `None` or `int`: If check is True, returns the response status code. If check is False, returns None.
 
-    Example Usage:
-        `status_code = send_request("https://example.com", project, count_lock, burst_data, headers=headers)`
+    ### Raises:
+    - No explicit raises.
     """
 
     with count_lock:
@@ -173,23 +215,22 @@ def check_ratelimit(
     """
     Use this function to check the ratelimit of a domain.
 
-    Args:
-        `url`: The URL of the domain to check the ratelimit.
-        `project`: The project setup instance.
-        `check`: Whether to perform a check request. If True, the function will send a single request to check the status code of the URL.(default: True)
-        `headers`: The headers to include in the request. If None, default headers will be used. (default: None)
-        `data`: The data to include in the request body. (default: None)
-        `is_get`: True if it is a GET request, False if it is a POST request. (default: True)
+    ### Args:
+    - `url`: The URL of the domain to check the ratelimit.
+    - `check`: Whether to perform a check request. If True, the function will send a single request to check the status code of the URL. (default: True)
+    - `headers`: The headers to include in the request. If None, default headers will be used. (default: None)
+    - `data`: The data to include in the request body. (default: None)
+    - `is_get`: True if it is a GET request, False if it is a POST request. (default: True)
 
-    Returns:
-        str: A message containing information about the ratelimit status.
+    ### Returns:
+    - `str`: A message containing information about the ratelimit status.
 
-    Example Usage:
-        `ratelimit_message = check_ratelimit("https://example.com", project)`
+    ### Raises:
+    - No explicit raises.
     """
     count_lock = Lock()
     burst_data = {"total_requests": 0, "requests_till_429": 0, "time_till_429": 0}
-    timer = asaniczka.Timer()
+    timer = asaniczka.Stopwatch()
 
     if check:
         status_code = send_request(
@@ -262,12 +303,15 @@ def help_forge_cookies(url: str, project) -> None:
     """
     Use this function to help identify cookie variables for forging cookies.
 
-    Args:
-        `url`: The URL to load in the browser and retrieve cookies from.
-        `project`: The project setup object for saving temporary files.
+    ### Args:
+    - `url`: The URL to load in the browser and retrieve cookies from.
+    - `project`: The project setup object for saving temporary files.
 
-    Example Usage:
-        help_forge_cookies("https://example.com", project)
+    ### Returns:
+    - `None`
+
+    ### Raises:
+    - No explicit raises.
     """
 
     print("Loading browser and getting initial cookies")
@@ -303,20 +347,16 @@ def steal_cookies(url: str, proxy: Proxy = None) -> dict:
     """
     Gets cookies from a given domain.
 
-    Args:
-        `url`: The URL from which to steal cookies.
-        `proxy`: Proxy Class. Optional
+    ### Args:
+    - `url`: The URL from which to steal cookies.
+    - `proxy`: Proxy Class. Optional (default: None)
 
-    Returns:
-        `dict`: A dictionary containing the stolen cookies, where the keys are the cookie names and the values are the cookie values.
+    ### Returns:
+    - `dict`: A dictionary containing the stolen cookies, where the keys are the cookie names and the values are the cookie values.
 
-    Raises:
-        RuntimeError: If an error occurs when stealing the cookies.
+    ### Raises:
+    - `RuntimeError`: If an error occurs when stealing the cookies.
 
-    Example Usage:
-        `cookies = ash.steal_cookies("https://example.com")`
-
-    IP addres must be
     """
 
     try:

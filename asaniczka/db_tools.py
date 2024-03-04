@@ -1,17 +1,22 @@
 """
-This module provides functions to interact with a PostgreSQL database using the `psql` command.
+### Introduction
+This module contains useful DB functions, which helps handle database instances for a project.
 
-## Functions:
-- check_psql_installation()
-- psql_subprocess_executor()
-- get_sb_table_names()
-- get_sb_column_details()
-- run_sb_db_command()
-- backup_sb_db()
-- run_backup_every_6_hours()
-
-## Classes
-- SupabaseManager
+### High-level overview
+- **SupabaseManager Class**:
+    - Helps in managing Supabase instances for the current project.
+    - It can start, stop, and initialize Supabase databases.
+- **Methods**:
+    - `check_supabase_cli_installation`: Checks if Supabase CLI is installed.
+    - `initialize_supabase`: Initializes Supabase for the project.
+    - `start_supabase_instance`: Starts a Supabase database instance.
+    - `stop_supabase_instance`: Stops any running Supabase instances.
+- **Other Functions**:
+    - `check_psql_installation`: Checks if PostgreSQL command-line tool is installed.
+    - `get_table_names_psql`: Retrieves a list of all tables inside the database.
+    - `get_column_details_psql`: Queries column names and data types of a table.
+- **Script Flow**:
+    - It runs commands to check installations, start and stop database instances, and perform backups at specified intervals.
 """
 
 import subprocess
@@ -24,15 +29,30 @@ import threading
 import random
 import asyncio
 
-import supabase
-from supabase import Client, create_client
 import asaniczka.main as asaniczka
 
 
 class SupabaseManager:
-    """This is a wrapper for the supabase cli
+    """
+    This class is a wrapper for the Supabase CLI tool for managing Supabase instances.
 
-    project is asaniczka.ProjectSetup
+    ### Attributes:
+    - `project`: Instance of `asaniczka.ProjectSetup` for the current project.
+    - `logger`: Logger object for logging messages.
+    - `sb_api_url`: String representing the Supabase API URL.
+    - `sb_db_url`: String representing the Supabase database URL.
+    - `sb_studio_url`: String representing the Supabase Studio URL.
+    - `sb_anon_key`: String representing the Supabase anonymous key.
+    - `db_backup_loop`: Boolean flag to control database backup loop.
+    - `is_db_backup_running`: Boolean flag to indicate if a database backup is currently running.
+
+    ### Methods:
+    - `__init__`: Initializes the SupabaseManager instance with project details.
+    - `check_supabase_cli_installation`: Checks if the Supabase CLI tool is installed on the system.
+    - `initialize_supabase`: Initializes Supabase for the current project by creating the Supabase config.
+    - `start_supabase_instance`: Starts a Supabase database instance with options for debug mode and backup.
+    - `stop_supabase_instance`: Stops any running Supabase instances with options for logging, debug mode, and backup.
+
     """
 
     def __init__(
@@ -53,10 +73,23 @@ class SupabaseManager:
         self.sb_anon_key = sb_anon_key
         self.db_backup_loop = False
         self.is_db_backup_running = False
-        self.sb_client: Client = self.create_supabse_client(should_return=True)
 
     def check_supabase_cli_installation(self) -> None:
-        """function checks if supabase cli is installed on the system"""
+        """
+        Function checks if supabase cli is installed on the system
+
+        ### Responsibility:
+        - Check if the Supabase CLI is installed on the system.
+
+        ### Args:
+        &nbsp;&nbsp; - `self`: Refers to an instance of a class.
+
+        ### Returns:
+        - None
+
+        ### Raises:
+        - `RuntimeError`: If Supabase CLI is not installed on the system.
+        """
         # pylint: disable=bare-except
         try:
             _ = subprocess.run("supabase", shell=True, check=True, capture_output=True)
@@ -73,7 +106,23 @@ class SupabaseManager:
             )
 
     def initialize_supabase(self, config_file_path: os.PathLike) -> None:
-        """Initalizes supabase for the current project"""
+        """
+        Initalizes supabase for the current project
+
+        ### Responsibility:
+        - Initializes Supabase for the current project by creating the Supabase config.
+        - Replaces standard Supabase ports with random ports to avoid clashes with other database instances.
+
+        ### Args:
+        - `self`: Refers to an instance of a class.
+        - `config_file_path`: Path to the Supabase config file.
+
+        ### Returns:
+        - None
+
+        ### Raises:
+        - No explicit errors raised by this function.
+        """
         self.project.logger.info("Creating supabase config")
         # initialize the project setup
         process = subprocess.Popen(
@@ -128,7 +177,27 @@ class SupabaseManager:
             config_file.truncate()
 
     def start_supabase_instance(self, debug=False) -> None:
-        """Call this function to start a supabase database"""
+        """
+        Call this function to start a Supabase database
+
+        ### Responsibility:
+        - Starts a Supabase database instance for the current project.
+        - Initializes Supabase if the config file does not exist.
+        - Handles starting the Supabase instance with or without debug mode.
+        - Extracts Supabase endpoints and logs them.
+        - Initiates a thread for running database backups every hour if not in debug mode.
+
+        ### Args:
+        - `self`: Refers to an instance of a class.
+        - `debug (optional)`: Boolean flag to specify whether to run in debug mode. Default is False.
+
+        ### Returns:
+        - None
+
+        ### Raises:
+        - `RuntimeError`: If there is an error when starting the database.
+        """
+
         self.project.logger.info("Starting Supabase")
 
         config_file_path = os.path.join(
@@ -191,8 +260,6 @@ class SupabaseManager:
             for key, value in items_to_log.items():
                 self.project.logger.info(f"Supabase {key}: {value}")
 
-            self.create_supabse_client()
-
             self.db_backup_loop = True
             background_backup = threading.Thread(
                 target=run_backup_every_hour, args=[self]
@@ -202,10 +269,28 @@ class SupabaseManager:
         self.logger.info("Supabase started sucessfully!")
 
     def stop_supabase_instance(self, no_log=False, debug=False, backup=True) -> None:
-        """Use this to stop any running supabase instances
+        """
+        Use this function to stop any running Supabase instances
 
-        Run with backup=False to stop without knowing any SB endpoints
+        ### Responsibility:
+        - Stops any running Supabase instances for the current project.
+        - Stops the backup loop if active.
+        - Waits for the current backup to finish before stopping.
+        - Restarts Supabase with or without running a backup before stopping.
+        - Clears Supabase endpoints after stopping.
+        - Logs the successful stop of Supabase instance.
 
+        ### Args:
+        - `self`: Refers to an instance of a class.
+        - `no_log (optional)`: Boolean flag to specify if logging should be skipped. Default is False.
+        - `debug (optional)`: Boolean flag to specify whether to stop in debug mode. Default is False.
+        - `backup (optional)`: Boolean flag to specify whether to run a backup before stopping. Default is True.
+
+        ### Returns:
+        - None
+
+        ### Raises:
+        - `RuntimeError`: If unable to stop Supabase due to Docker not running or other reasons.
         """
 
         if not no_log:
@@ -256,97 +341,24 @@ class SupabaseManager:
                 "Unable to stop Supabase. Are you sure Docker is running?"
             ) from error
 
-    def create_supabse_client(self, should_return=False) -> supabase.Client:
-        """Create a supabase client"""
-
-        if not self.sb_anon_key or not self.sb_api_url:
-            self.logger.warning("Supabase client not created since no url or anon key")
-            return None
-
-        client = create_client(self.sb_api_url, self.sb_anon_key)
-
-        try:
-            logging.getLogger("httpx").setLevel(logging.CRITICAL)
-            logging.getLogger("supabase").setLevel(logging.CRITICAL)
-            logging.getLogger("postgrest").setLevel(logging.CRITICAL)
-            logging.getLogger("realtime").setLevel(logging.CRITICAL)
-            logging.basicConfig(level=logging.CRITICAL, force=True)
-        except Exception as error:
-            print(f"Error disabling Supabase logger: {error}")
-
-        if should_return:
-            return client
-
-        self.sb_client = client
-        self.logger.info("Supabase client created successfully")
-        return None
-
-    def insert_row_to_db(
-        self,
-        data_dict: dict,
-        table_name: str,
-        return_minimal: Optional[bool] = True,
-        suppress_errors: Optional[bool] = True,
-        suppress_logs=False,
-    ) -> None | supabase.PostgrestAPIResponse:
-        """Function will run an insert query with the given data to the table via supabase api"""
-        try:
-            data = (
-                self.sb_client.table(table_name)
-                .insert(data_dict, returning="minimal")
-                .execute()
-            )
-        # pylint:disable=broad-except
-        except Exception as error:
-            if not suppress_logs:
-                self.logger.error(
-                    f"Error when inserting to {table_name}:    {asaniczka.format_error(error)}"
-                )
-            if not suppress_errors:
-                raise RuntimeError(
-                    f"Error when inserting to db: {asaniczka.format_error(error)}"
-                ) from error
-
-        if not return_minimal:
-            return data
-        return None
-
-    async def async_insert_row_to_db(
-        self,
-        data_dict: dict,
-        table_name: str,
-        return_minimal: Optional[bool] = True,
-        suppress_errors: Optional[bool] = True,
-        suppress_logs=False,
-    ) -> None | supabase.PostgrestAPIResponse:
-        """Async version of insert_row_to_db.
-        YOu don't have to wait for a response if you don't want to"""
-
-        return await asyncio.to_thread(
-            self.insert_row_to_db,
-            data_dict,
-            table_name,
-            return_minimal=return_minimal,
-            suppress_errors=suppress_errors,
-            suppress_logs=suppress_logs,
-        )
-
 
 def check_psql_installation(
     logger: Optional[Union[None, logging.Logger]] = None
 ) -> None:
     """
-    Default checker to see if psql is installed.
+    Default checker to see if psql (PostgreSQL) is installed.
 
-    Args:
-        `logger`: The logger object to use for logging. Defaults to None.
+    ### Responsibility:
+    - Checks if the psql command-line tool for PostgreSQL is installed on the system.
 
-    Returns:
-        `None`
+    ### Args:
+    - `logger`: Optional parameter for passing a logger object to log messages. Defaults to None.
 
-    Raises:
-        `RuntimeError`: If psql is not installed.
+    ### Returns:
+    - None
 
+    ### Raises:
+    - `RuntimeError`: If the psql command-line tool is not installed on the system.
     """
 
     try:
@@ -369,12 +381,15 @@ def psql_subprocess_executor(command: str, db_url: str) -> subprocess.CompletedP
     """
     General try-except wrapper for executing psql commands via subprocess.
 
-    Args:
-        `command`: The psql command to be executed.
-        `db_url`: The database URL.
+    ### Responsibility:
+    - Executes a psql command on a specified database URL using subprocess.
 
-    Returns:
-        `subprocess.CompletedProcess`: The completed subprocess information.
+    ### Args:
+    - `command`: The psql command to be executed.
+    - `db_url`: The database URL where the command will be executed.
+
+    ### Returns:
+    - `subprocess.CompletedProcess`: Information about the completed subprocess execution.
 
     """
 
@@ -399,18 +414,21 @@ def get_table_names_psql(
 
     Must send either `sb_manager` or `db_url and logger`
 
-    Args:
-        `sb_manager (dbt.SupabaseManager | None)`: The SupabaseManager instance. Defaults to None.
-        `db_url`: The database URL. Defaults to None.
-        `logger`: The logger object to use for logging. Defaults to None.
-        `make_list`: Whether to return the table names as a list or a string. Defaults to False.
+    ### Responsibility:
+    - Retrieves a list of table names from a specified database using psql commands.
 
-    Returns:
-        `str | list`: The table names.
+    ### Args:
+    - `sb_manager (dbt.SupabaseManager | None)`: The SupabaseManager instance. Defaults to None.
+    - `db_url`: The database URL where the tables exist.
+    - `logger`: The logger object to use for logging. Defaults to None.
+    - `make_list`: Whether to return the table names as a list or a string. Defaults to False.
 
-    Raises:
-        `AttributeError`: If db_url is not provided.
-        `RuntimeError`: If the psql subprocess returns a non-zero exit code.
+    ### Returns:
+    - `str | list`: The table names.
+
+    ### Raises:
+    - `AttributeError`: If db_url is not provided.
+    - `RuntimeError`: If the psql subprocess returns a non-zero exit code.
 
     """
 
@@ -461,18 +479,21 @@ def get_column_details_psql(
 
     Must send either `sb_manager` or `db_url and logger`
 
-    Args:
-        `table`: The name of the table.
-        `sb_manager (dbt.SupabaseManaager, None)`: A SupabaseManaager instance (optional).
-        `db_url`: The database URL (optional).
-        `logger`: A logger instance (optional).
+    ### Responsibility:
+    - Retrieves column names, data types, defaults, and nullability of a specific table from a database using psql commands.
 
-    Returns:
-        `str`: The column details of the specified table.
+    ### Args:
+    - `table`: The name of the table for which column details are to be queried.
+    - `sb_manager (dbt.SupabaseManaager, None)`: A SupabaseManaager instance (optional).
+    - `db_url`: The database URL where the table is located (optional).
+    - `logger`: A logger instance for logging information (optional).
 
-    Raises:
-        `AttributeError`: If no database URL is provided.
-        `RuntimeError`: If the subprocess returns a non-zero exit code.
+    ### Returns:
+    - `str`: The column details of the specified table.
+
+    ### Raises:
+    - `AttributeError`: If no database URL is provided.
+    - `RuntimeError`: If the subprocess returns a non-zero exit code.
     """
 
     if sb_manager:
@@ -516,18 +537,21 @@ def run_db_command_psql(
 
     Must send either `sb_manager` or `db_url and logger`
 
-    Args:
-        `command`: The psql command to be executed.
-        `sb_manager (dbt.SupabaseManager, None)`: A SupabaseManager instance (optional).
-        `db_url`: The database URL (optional).
-        `logger`: A logger instance (optional).
+    ### Responsibility:
+    - Executes a psql command to create a table in the specified database.
 
-    Returns:
-        `str | None`: The output of the command execution.
+    ### Args:
+    - `command`: The psql command to create the table.
+    - `sb_manager (dbt.SupabaseManager, None)`: A SupabaseManager instance (optional).
+    - `db_url`: The database URL where the table is to be created (optional).
+    - `logger`: A logger instance for logging information (optional).
 
-    Raises:
-        `AttributeError`: If no database URL is provided.
-        `RuntimeError`: If the subprocess returns a non-zero exit code.
+    ### Returns:
+    - `str | None`: The output of the command execution.
+
+    ### Raises:
+    - `AttributeError`: If no database URL is provided.
+    - `RuntimeError`: If the subprocess returns a non-zero exit code.
     """
 
     if sb_manager:
@@ -563,19 +587,21 @@ def backup_db_psql(
     logger: Optional[Union[None, logging.Logger]] = None,
 ) -> None:
     """
-    Creates a backup of the database to the given folder.
+    Creates a backup of the database to the specified folder.
 
-    Must send either `asaniczka.sb_managerSetup` or `db_url` and `dest_folder`.
+    Must send either `sb_manager` setup or `db_url` and `dest_folder`.
 
-    Args:
-        `sb_manager (asaniczka.sb_managerSetup, None)`: A sb_manager setup instance (optional).
-        `db_url`: The database URL (optional).
-        `dest_folder`: The destination folder to store the backup (optional).
-        `logger`: A logger instance (optional).
+    ### Responsibility:
+    - Initiates a database backup process to store the database schema, roles, and data in separate SQL files.
 
-    Raises:
-        `AttributeError`: If no database URL is provided.
+    ### Args:
+    - `sb_manager (asaniczka.sb_managerSetup, None)`: A setup instance for managing the database backup process (optional).
+    - `db_url`: The database URL for the database to be backed up (optional).
+    - `dest_folder`: The destination folder where the backup files will be stored (optional).
+    - `logger`: A logger instance for logging information (optional).
 
+    ### Raises:
+    - `AttributeError`: If no database URL is provided.
     """
 
     if sb_manager:
@@ -628,11 +654,19 @@ def backup_db_psql(
 
 def run_backup_every_hour(sb_manager) -> None:
     """
-    Background task to run database backup every 6 hours.
+    Runs a background task to execute database backup every 6 hours.
 
-    Args:
-        `sb_manager (dbt.SupabaseManager)`: A SupabaseManager instance.
+    ### Responsibility:
+    - Periodically triggers the database backup process at specified intervals.
 
+    ### Args:
+    - `sb_manager (dbt.SupabaseManager)`: A SupabaseManager instance responsible for managing the database backup process.
+
+    ### Returns:
+    - `None`
+
+    ### Raises:
+    - No explicit errors raised within the function.
     """
 
     def do_sleep(time_to_sleep: int) -> None:
