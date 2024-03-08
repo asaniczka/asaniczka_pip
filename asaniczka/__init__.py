@@ -2,7 +2,7 @@
 
 from asaniczka.main import (
     ProjectSetup,
-    Timer,
+    Stopwatch,
     sanitize_filename,
     setup_logger,
     save_file,
