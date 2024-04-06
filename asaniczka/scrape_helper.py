@@ -447,3 +447,4 @@ def download_proxies(url: str) -> list[Proxy]:
 
     working_proxies = validate_proxies(proxies)
     print("You have ", len(working_proxies), " working proxies!")
+    return working_proxies
