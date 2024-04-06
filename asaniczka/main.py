@@ -516,11 +516,11 @@ def get_request(
         except Exception as error:
             if logger:
                 if logger_level_debug:
-                    logger.debug("Failed to POST request. %s", format_error(error))
+                    logger.debug("Failed to GET request. %s", format_error(error))
                 else:
-                    logger.warning("Failed to POST request. %s", format_error(error))
+                    logger.warning("Failed to GET request. %s", format_error(error))
             else:
-                print("Failed to POST request. %s", format_error(error))
+                print("Failed to GET request. %s", format_error(error))
 
             retries += 1
             continue
@@ -700,14 +700,14 @@ def post_request(
     timeout: int = 45,
 ) -> str | None:
     """
-    Makes a basic HTTP POST request to the given URL.
+    Makes a basic HTTP GET request to the given URL.
 
     ### Responsibility:
-    - Make a POST request to a URL with options for handling exceptions, logging, proxies, payload, and session usage.
+    - Make a GET request to a URL with options for handling exceptions, logging, proxies, payload, and session usage.
     - Retry the request multiple times and raise an error if unsuccessful after specified retries.
 
     ### Args:
-    - `url`: The URL to make the POST request.
+    - `url`: The URL to make the GET request.
     - `headers`: The headers to be included in the request.
     - `payload`: The data to be sent in the request body.
     - `silence_exceptions`: Will not raise any exceptions if set to True.
@@ -892,14 +892,14 @@ async def async_post_request(
             # if logger level is said to be debug, do debug, otherwise it's a warning
             if logger_level_debug:
                 logger.debug(
-                    "Failed to get request. \
+                    "Failed to POST request. \
                     Status code %d, Response text: %s",
                     response.status_code,
                     format_error(response.text),
                 )
             else:
                 logger.warning(
-                    "Failed to get request. \
+                    "Failed to POST request. \
                     Status code %d, Response text: %s",
                     response.status_code,
                     format_error(response.text),
