@@ -514,10 +514,13 @@ def get_request(
                 )
         # pylint: disable=broad-except
         except Exception as error:
-            if logger_level_debug:
-                logger.debug("Failed to get request. %s", format_error(error))
+            if logger:
+                if logger_level_debug:
+                    logger.debug("Failed to POST request. %s", format_error(error))
+                else:
+                    logger.warning("Failed to POST request. %s", format_error(error))
             else:
-                logger.warning("Failed to get request. %s", format_error(error))
+                print("Failed to POST request. %s", format_error(error))
 
             retries += 1
             continue
@@ -627,10 +630,13 @@ async def async_get_request(
                 else:
                     response = await client.get(url, headers=headers, timeout=timeout)
         except Exception as error:
-            if logger_level_debug:
-                logger.debug("Failed to get request. %s", error)
+            if logger:
+                if logger_level_debug:
+                    logger.debug("Failed to GET request. %s", format_error(error))
+                else:
+                    logger.warning("Failed to GET request. %s", format_error(error))
             else:
-                logger.warning("Failed to get request. %s", error)
+                print("Failed to GET request. %s", format_error(error))
 
             retries += 1
             continue
@@ -748,6 +754,8 @@ def post_request(
                     logger.debug("Failed to POST request. %s", format_error(error))
                 else:
                     logger.warning("Failed to POST request. %s", format_error(error))
+            else:
+                print("Failed to POST request. %s", format_error(error))
 
             retries += 1
             continue
@@ -863,10 +871,13 @@ async def async_post_request(
                     )
         # pylint: disable=broad-except
         except Exception as error:
-            if logger_level_debug:
-                logger.debug("Failed to POST request. %s", format_error(error))
+            if logger:
+                if logger_level_debug:
+                    logger.debug("Failed to POST request. %s", format_error(error))
+                else:
+                    logger.warning("Failed to POST request. %s", format_error(error))
             else:
-                logger.warning("Failed to POST request. %s", format_error(error))
+                print("Failed to POST request. %s", format_error(error))
 
             retries += 1
             continue
