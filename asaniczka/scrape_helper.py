@@ -81,12 +81,18 @@ class Proxy:
         ### Raises:
         - `IndexError`: If the split_proxy list does not have enough elements to assign to ip_address, port, username, and password.
         """
-
-        split_proxy = self.raw_string.split(":")
-        self.ip_address = split_proxy[0]
-        self.port = split_proxy[1]
-        self.username = split_proxy[2]
-        self.password = split_proxy[3]
+        try:
+            split_proxy = self.raw_string.split(":")
+            self.ip_address = split_proxy[0]
+            self.port = split_proxy[1]
+            self.username = split_proxy[2]
+            self.password = split_proxy[3]
+        except Exception as e:
+            print(e)
+            self.ip_address = ""
+            self.port = ""
+            self.username = ""
+            self.password = ""
 
     def to_playwright(self) -> dict:
         """
@@ -383,3 +389,61 @@ def steal_cookies(url: str, proxy: Proxy = None) -> dict:
         raise RuntimeError(
             f"Error when stealing cookies. Please inform developer (asaniczka@gmail.com) of this error as this error is not handled. \n{asaniczka.format_error(error)}"
         ) from error
+
+
+def validate_proxies(proxies: list[Proxy]) -> list[Proxy]:
+    """
+    Checks if the provided proxies are live and returns only the live ones
+    """
+
+    def send_dummy_request(proxy: Proxy) -> Proxy | None:
+        response = asaniczka.get_request(
+            "https://api.ipify.org",
+            silence_exceptions=True,
+            timeout=5,
+            proxy=proxy.to_basic_auth(),
+        )
+
+        if response:
+            return proxy
+        return None
+
+    working_proxies = []
+    with concurrent.futures.ThreadPoolExecutor() as thread_executor:
+        futures = []
+
+        for proxy in proxies:
+            future = thread_executor.submit(send_dummy_request, proxy)
+
+            futures.append(future)
+
+        for future in concurrent.futures.as_completed(futures):
+            result = future.result()
+            if result:
+                working_proxies.append(result)
+
+    return working_proxies
+
+
+def download_proxies(url: str) -> list[Proxy]:
+    """
+    Downloads the proxies from your webshare live url
+    """
+
+    if not url:
+        raise ValueError("No URL provided")
+
+    if not url.startswith("https://proxy.webshare.io"):
+        raise ValueError("We only accept webshare URLS")
+
+    response = asaniczka.get_request(url, timeout=5)
+
+    if not response:
+        raise ValueError("URL didn't recieve any data")
+
+    lines = response.split("\n")
+    lines = [line.strip() for line in lines]
+    proxies = [Proxy(line, ProxyProvider.WEBSHARE) for line in lines]
+
+    working_proxies = validate_proxies(proxies)
+    print("You have ", len(working_proxies), " working proxies!")
