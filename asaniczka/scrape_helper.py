@@ -425,7 +425,7 @@ def validate_proxies(proxies: list[Proxy]) -> list[Proxy]:
     return working_proxies
 
 
-def download_proxies(url: str) -> list[Proxy]:
+def download_proxies(url: str, validate=True) -> list[Proxy]:
     """
     Downloads the proxies from your webshare live url
     """
@@ -443,8 +443,13 @@ def download_proxies(url: str) -> list[Proxy]:
 
     lines = response.split("\n")
     lines = [line.strip() for line in lines]
+    lines = [line for line in lines if line]
     proxies = [Proxy(line, ProxyProvider.WEBSHARE) for line in lines]
 
-    working_proxies = validate_proxies(proxies)
-    print("You have ", len(working_proxies), " working proxies!")
+    if validate:
+        working_proxies = validate_proxies(proxies)
+        print("You have ", len(working_proxies), " working proxies!")
+    else:
+        working_proxies = proxies
+
     return working_proxies
