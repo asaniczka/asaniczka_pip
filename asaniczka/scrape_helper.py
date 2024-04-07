@@ -442,8 +442,7 @@ def download_proxies(url: str, validate=True) -> list[Proxy]:
         raise ValueError("URL didn't recieve any data")
 
     lines = response.split("\n")
-    lines = [line.strip() for line in lines]
-    lines = [line for line in lines if ":" in line]
+    lines = [line.strip() for line in lines if ":" in line]
     proxies = [Proxy(line, ProxyProvider.WEBSHARE) for line in lines]
 
     if validate:
